@@ -1,4 +1,4 @@
-name: Build Docker Images for Python based on Alpine
+name: ci-python-alpine
 
 
 
@@ -7,7 +7,6 @@ on:
   push:
     paths:
       - "src/python/alpine/*"
-
 
 
 
@@ -33,11 +32,6 @@ env:
   DOCKER_CMD_DEVEL: ''
   DOCKER_CMD_TEST: ''
   DOCKER_PARAMS: ''
-
-  GITHUB_SHA: ${{github.sha}}
-  GITHUB_RUN_ID: ${{github.run_id}}
-  TAG_VERSION: ${GITHUB_SHA::8}-${GITHUB_RUN_ID}
-
 
 
 
@@ -70,6 +64,11 @@ jobs:
       - name: Setup for Alpine Image
         id: setup-alpine-image
         run: |
+          ## setting and exporting TAG_VERSION environment variable
+          GITHUB_SHA=${{github.sha}}
+          GITHUB_RUN_ID=${{github.run_id}}
+          echo "TAG_VERSION=${GITHUB_SHA::8}-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
+
           ## creating a exclusive build folder, because buildkit don't support subdirs, yet
           ln -s src/python/alpine/ .build-python-alpine
 

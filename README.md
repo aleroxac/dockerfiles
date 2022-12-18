@@ -1,5 +1,5 @@
 # dockerfiles
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/aleroxac/dockerfiles/ci-python-alpine.yaml?branch=main)
+[![ci-python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/aleroxac/dockerfiles)
 
 Badass base container images to be used in any project.
@@ -48,8 +48,8 @@ These dockerfiles has been builded based on:
 ## Images and tags
 | image | language | base | arch |status |
 |:-:|:-:|:-:|:-:|:-:|
-|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/amd64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
-|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/arm64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
+|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/amd64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)|
+|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/arm64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)|
 
 
 
