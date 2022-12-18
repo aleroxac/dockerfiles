@@ -33,10 +33,13 @@ jobs:
           GITHUB_RUN_ID=${{github.run_id}}
           echo "TAG_VERSION=${GITHUB_SHA::8}-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
+      - name: test
+        run: pwd && ls -l
+
       - name: build-temp-image
         uses: docker/build-push-action@v3.2.0
         with:
-          file: src/python/alpine/Dockerfile
+          file: ./src/python/alpine/Dockerfile
           build-args: |
             IMAGE_NAME=python-alpine
             IMAGE_VERSION=${{env.TAG_VERSION}}
@@ -62,7 +65,7 @@ jobs:
             DOCKER_PARAMS=""
           tags: |
             aleroxac/python-alpine:${{env.TAG_VERSION}}
-          context: src/python/alpine/
+          context: ./src/python/alpine/
           push: true
 
 # scan-image
