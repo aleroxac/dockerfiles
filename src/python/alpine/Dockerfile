@@ -56,15 +56,11 @@ LABEL \
     org.label-schema.docker.params=${DOCKER_PARAMS}
 
 
-# ---------- GROUNDWORK
+# ---------- MAIN
 WORKDIR /code
 RUN addgroup python && \
     adduser -h /code -G python -s /bin/bash -S python && \
     chown -R python .
-
-
-
-# ---------- MAIN
 USER python
 CMD python
 HEALTHCHECK CMD [ "python --version" ]

@@ -1,8 +1,8 @@
 # dockerfiles
-[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/aleroxac/dockerfiles/ci.yaml?branch=main)
+![GitHub last commit](https://img.shields.io/github/last-commit/aleroxac/dockerfiles)
 
-Dockerfiles to be used as base for any project
-
+Badass base container images to be used in any project.
 
 
 ## Brief
@@ -18,47 +18,15 @@ These dockerfiles has been builded based on:
 - Container Initiative specifications
 - Label Schema Convention
 - Docker Content Trust
-
-- armosec/kubescape
-- aquasec/trivy
-- redhat quay/clair
-- snyk
-
-
-
-## Scanners
-- filesystem
-    - malware
-    - content finding(indicators of compromise)
-    - layers(diff)
-
-- network
-    - network egress
-    - network ingress
-    - waas(web application and api security)
-
-- runtime
-    - dta(dynamic threat analysis): malware, crypto miners, code injection backdoors, network anomalies
-    - se-linux
-    - sandbox
-
-- conformity
-    - scan hadolint
-    - scan kics
-
-- vulnerabilities
-    - scan trivy
-    - scan clair
-    - scan snyk
+- Scan images using aquasec/trivy
+- Scan dockerfiles using hadolint
+- Scan project using kics
 
 
 
 ## Languages Supported
 - python
-- go
-- javascript
-- java
-- php
+
 
 
 ## Architectures Supported
@@ -69,7 +37,6 @@ These dockerfiles has been builded based on:
 
 ## Image Types Supported
 - alpine
-- slim
 
 
 
@@ -79,7 +46,7 @@ These dockerfiles has been builded based on:
 
 
 ## Images and tags
-| image | language | base | arch | status |
+| image | language | base | arch |status |
 |:-:|:-:|:-:|:-:|:-:|
 |[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/amd64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
 |[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/arm64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|

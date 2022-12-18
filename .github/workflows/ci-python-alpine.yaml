@@ -1,0 +1,109 @@
+name: Build Docker Images for Python based on Alpine
+
+
+
+on:
+  push
+
+
+
+env:
+  IMAGE_NAME: python-alpine
+  IMAGE_VERSION: ${{env.TAG_VERSION}}
+  IMAGE_ARCHITECTURE: x86_64
+  OS_NAME: 'Alpine Linux'
+  OS_VERSION: '3.17.0'
+  KERNEL_VERSION: '6.0.12-arch1-1'
+  LICENSE: ''
+  BUILD_DATE: $(TZ='America/Sao_Paulo' date +'%Y-%m-%dT%H:%M:%SZ')
+  VCS_REF: $(git rev-parse --short HEAD)
+  VCS_URL: ''
+  IMAGE_MAINTAINER: 'acardoso.devops@gmail.com'
+  IMAGE_VENDOR: 'Groking Labs'
+  IMAGE_SCHEMA_VERSION: '1.0'
+  IMAGE_USAGE: ''
+  IMAGE_URL: ''
+  IMAGE_DESCRIPTION: 'Badass alpine base image for python projects'
+  DOCKER_CMD: ''
+  DOCKER_CMD_DEBUG: ''
+  DOCKER_CMD_HELP: ''
+  DOCKER_CMD_DEVEL: ''
+  DOCKER_CMD_TEST: ''
+  DOCKER_PARAMS: ''
+
+  GITHUB_SHA: ${{github.sha}}
+  GITHUB_RUN_ID: ${{github.run_id}}
+  TAG_VERSION: ${GITHUB_SHA::8}-${GITHUB_RUN_ID}
+
+
+
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    name: Build Python Images
+    steps:
+      - name: checkout
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: buildx-setup
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: docker-login
+        id: docker-login
+        uses: docker/login-action@v2.1.0
+        with:
+          username: ${{secrets.DOCKERHUB_USER}}
+          password: ${{secrets.DOCKERHUB_PASS}}
+
+
+
+      # ---------- ALPINE IMAGE
+      - name: Setup for Alpine Image
+        id: setup-alpine-image
+        if: github.event.head_commit.modified.includes('src/python/alpine/Dockerfile')
+        run: |
+          ## creating a exclusive build folder, because buildkit don't support subdirs, yet
+          ln -s src/python/alpine/ .build-python-alpine
+
+      - name: Build Alpine Image
+        id: build-alpine-image
+        if: github.event.head_commit.modified.includes('src/python/alpine/Dockerfile')
+        uses: docker/build-push-action@v3.2.0
+        with:
+          push: false
+          file: .build-python-alpine/Dockerfile
+          context: .build-python-alpine
+          tags: |
+            aleroxac/python-alpine:${{env.TAG_VERSION}}
+          build-args: |
+            IMAGE_NAME=${{env.IMAGE_NAME}}
+            IMAGE_VERSION=${{env.IMAGE_VERSION}}
+            IMAGE_ARCHITECTURE=${{env.IMAGE_ARCHITECTURE}}
+            OS_NAME=${{env.OS_NAME}}
+            OS_VERSION=${{env.OS_VERSION}}
+            KERNEL_VERSION=${{env.KERNEL_VERSION}}
+            LICENSE=${{env.LICENSE}}
+            BUILD_DATE=${{env.BUILD_DATE}}
+            VCS_REF=${{env.VCS_REF}}
+            VCS_URL=${{env.VCS_URL}}
+            IMAGE_MAINTAINER=${{env.IMAGE_MAINTAINER}}
+            IMAGE_VENDOR=${{env.IMAGE_VENDOR}}
+            IMAGE_SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
+            IMAGE_USAGE=${{env.IMAGE_USAGE}}
+            IMAGE_URL=${{env.IMAGE_URL}}
+            IMAGE_DESCRIPTION=${{env.IMAGE_DESCRIPTION}}
+            DOCKER_CMD=${{env.DOCKER_CMD}}
+            DOCKER_CMD_DEBUG=${{env.DOCKER_CMD_DEBUG}}
+            DOCKER_CMD_HELP=${{env.DOCKER_CMD_HELP}}
+            DOCKER_CMD_DEVEL=${{env.DOCKER_CMD_DEVEL}}
+            DOCKER_CMD_TEST=${{env.DOCKER_CMD_TEST}}
+            DOCKER_PARAMS=${{env.DOCKER_PARAMS}}
+          platforms: |
+            linux/amd64
+            linux/arm64

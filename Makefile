@@ -2,10 +2,11 @@
 help: ## Show this menu
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-.PHONY: build
-build: ## Build the container image
-	@ln -s src/python/alpine/ .build
-	@docker build -f .build/Dockerfile \
+.PHONY: build-python-alpine
+build-python-alpine: ## Build the container image
+	@ln -s src/python/alpine/ .build-python-alpine
+	@docker build \
+		-f .build-python-alpine/Dockerfile \
 		--build-arg IMAGE_NAME=python-alpine \
 		--build-arg IMAGE_VERSION=test \
 		--build-arg IMAGE_ARCHITECTURE=x86_64 \
@@ -28,8 +29,8 @@ build: ## Build the container image
 		--build-arg DOCKER_CMD_DEVEL="" \
 		--build-arg DOCKER_CMD_TEST="" \
 		--build-arg DOCKER_PARAMS="" \
-		-t aleroxac/python-alpine:test .build
-		@rm -rf .build
+		-t aleroxac/python-alpine:test .build-python-alpine
+	@rm -rf .build-python-alpine
 
 .PHONY: scan-vul
 scan-vul: ## Scan container image, looking for
