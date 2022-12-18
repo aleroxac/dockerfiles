@@ -12,8 +12,9 @@ push:tag  > workflow:release > build,scan,test,release
 - [x] implement demo for python-alpine
 - [ ] create a workflow for release
 
-- [ ] implement scan-dockerfile: hadolint, kics
-- [ ] implement scan-image: trivy
+- [ ] implement scan-hadolint
+- [ ] implement scan-kics
+- [ ] implement scan-trivy
 - [ ] implement test-image: ansible, docker-run/docker-compose, testinfra
 
 - [ ] add badges on readme:

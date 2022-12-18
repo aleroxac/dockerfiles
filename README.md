@@ -5,22 +5,16 @@
 Badass base container images to be used in any project.
 
 
-## Brief
-These dockerfiles has been builded based on:
-- Open Container Initiative specifications
-- Docker Official Documentation
-- Label Schema Convention
-- Best practices, tips and tricks earned from professional experiences working with as SRE/DevOps/Platform Enginner
-
-
-
 ## Resources
-- Container Initiative specifications
-- Label Schema Convention
-- Docker Content Trust
-- Scan images using aquasec/trivy
-- Scan dockerfiles using hadolint
-- Scan project using kics
+- Best practices, tips and tricks earned from professional experiences working with as SRE/DevOps/Platform Engineer
+- [Docker Official Documentation](https://docs.docker.com/)
+- [Label Schema Convention](http://label-schema.org/rc1/)
+- [Semantic Versioning Convention](https://semver.org/spec/v2.0.0.html)
+- [Keep Changelog Convention](https://keepachangelog.com/en/1.0.0/)
+- [Docker Content Trust](https://docs.docker.com/engine/security/trust/)
+- [Scan images using aquasec/trivy](https://github.com/aquasecurity/trivy)
+- [Scan dockerfiles using hadolint](https://github.com/hadolint/hadolint)
+- [Scan project using kics](https://github.com/Checkmarx/kics)
 
 
 
@@ -41,7 +35,7 @@ These dockerfiles has been builded based on:
 
 
 ## Usage
-- Choose a language end see one of the [demos here](demo)
+- Choose one language and see the [demos here](demos)
 
 
 
