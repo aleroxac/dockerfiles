@@ -1,5 +1,5 @@
 # dockerfiles
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/aleroxac/dockerfiles/ci.yaml?branch=main)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/aleroxac/dockerfiles/ci-python-alpine.yaml?branch=main)
 ![GitHub last commit](https://img.shields.io/github/last-commit/aleroxac/dockerfiles)
 
 Badass base container images to be used in any project.

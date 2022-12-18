@@ -9,7 +9,6 @@ on:
 
 env:
   IMAGE_NAME: python-alpine
-  IMAGE_VERSION: ${{env.TAG_VERSION}}
   IMAGE_ARCHITECTURE: x86_64
   OS_NAME: 'Alpine Linux'
   OS_VERSION: '3.17.0'
@@ -83,7 +82,7 @@ jobs:
             aleroxac/python-alpine:${{env.TAG_VERSION}}
           build-args: |
             IMAGE_NAME=${{env.IMAGE_NAME}}
-            IMAGE_VERSION=${{env.IMAGE_VERSION}}
+            IMAGE_VERSION=${{env.TAG_VERSION}}
             IMAGE_ARCHITECTURE=${{env.IMAGE_ARCHITECTURE}}
             OS_NAME=${{env.OS_NAME}}
             OS_VERSION=${{env.OS_VERSION}}
