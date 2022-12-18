@@ -1,12 +1,11 @@
-name: ci-python-alpine
+name: release-python-alpine
 
 
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - "src/python/alpine/*"
+    tags:
+      - "v*"
 
 
 
@@ -36,9 +35,9 @@ env:
 
 
 jobs:
-  ci:
+  release:
     runs-on: ubuntu-latest
-    name: Build container image
+    name: Create repository release and publish images
     steps:
       - name: Checkout the code
         id: checkout
@@ -65,9 +64,7 @@ jobs:
         id: setup-build-context
         run: |
           ## setting and exporting TAG_VERSION environment variable
-          GITHUB_SHA=${{github.sha}}
-          GITHUB_RUN_ID=${{github.run_id}}
-          echo "TAG_VERSION=${GITHUB_SHA::8}-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
+          echo "TAG_VERSION=$(git --no-pager tag -l | sort -nr | head -n1)" >> ${GITHUB_ENV}
 
           ## creating a exclusive build folder, because buildkit don't support subdirs, yet
           ln -s src/python/alpine/ .build-python-alpine
@@ -107,3 +104,10 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
+
+      - name: Create repository release
+        id: create-repo-release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true

@@ -32,8 +32,8 @@ build-python-alpine: ## Build the container image
 		-t aleroxac/python-alpine:test .build-python-alpine
 	@rm -rf .build-python-alpine
 
-.PHONY: scan-vul
-scan-vul: ## Scan container image, looking for
+.PHONY: scan-trivy-python-alpine
+scan-trivy-python-alpine: ## Scan container image using aquasec/trivy
 	@docker run \
 		-v ${PWD}:/target \
 		-v /run/containerd/containerd.sock:/run/containerd/containerd.sock \
