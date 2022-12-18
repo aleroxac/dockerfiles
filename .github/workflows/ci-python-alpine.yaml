@@ -65,14 +65,14 @@ jobs:
       # ---------- ALPINE IMAGE
       - name: Setup for Alpine Image
         id: setup-alpine-image
-        if: github.event.head_commit.modified.includes('src/python/alpine/Dockerfile')
+        if: ${{ github.event.head_commit.modified.includes('src/python/alpine/Dockerfile') }}
         run: |
           ## creating a exclusive build folder, because buildkit don't support subdirs, yet
           ln -s src/python/alpine/ .build-python-alpine
 
       - name: Build Alpine Image
         id: build-alpine-image
-        if: github.event.head_commit.modified.includes('src/python/alpine/Dockerfile')
+        if: ${{ github.event.head_commit.modified.includes('src/python/alpine/Dockerfile') }}
         uses: docker/build-push-action@v3.2.0
         with:
           push: false
