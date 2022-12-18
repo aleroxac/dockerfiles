@@ -35,12 +35,15 @@ jobs:
 
       ## buildkit dont support subdirs, yet
       - name: setup-build-context
-        run: ln -s src/python/alpine/ .build
+        run: |
+          ln -s src/python/alpine/ .build
+          pwd && ls -l
+          ls -l .build/
 
       - name: build-temp-image
         uses: docker/build-push-action@v3.2.0
         with:
-          file: src/python/alpine/Dockerfile
+          file: .build/Dockerfile
           build-args: |
             IMAGE_NAME=python-alpine
             IMAGE_VERSION=${{env.TAG_VERSION}}
