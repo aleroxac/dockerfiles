@@ -1,4 +1,6 @@
 # dockerfiles
+[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)
+
 Dockerfiles to be used as base for any project
 
 
@@ -73,6 +75,14 @@ These dockerfiles has been builded based on:
 
 ## Usage
 - Choose a language end see one of the [demos here](demo)
+
+
+
+## Images and tags
+| image | language | base | arch | status |
+|:-:|:-:|:-:|:-:|:-:|
+|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/amd64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
+|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/arm64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
 
 
 
