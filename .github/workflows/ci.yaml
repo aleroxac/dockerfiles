@@ -23,20 +23,19 @@ jobs:
           username: ${{secrets.DOCKERHUB_USER}}
           password: ${{secrets.DOCKERHUB_PASS}}
 
-      - name: set-tagname
+      - name: setup
         run: |
+          ## setting and exporting TAG_VERSION environment variable
           GITHUB_SHA=${{github.sha}}
           GITHUB_RUN_ID=${{github.run_id}}
           echo "TAG_VERSION=${GITHUB_SHA::8}-${GITHUB_RUN_ID}" >> ${GITHUB_ENV}
 
-      ## buildkit dont support subdirs, yet
-      - name: setup-build-context
-        run: |
+          ## creating a exclusive build folder, because buildkit don't support subdirs, yet
           ln -s src/python/alpine/ .build
           pwd && ls -l
           ls -l .build/
 
-      - name: build-temp-image
+      - name: build
         uses: docker/build-push-action@v3.2.0
         with:
           file: .build/Dockerfile
