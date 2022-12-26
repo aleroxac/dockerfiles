@@ -17,20 +17,25 @@ Badass base container images to be used in any project.
 - [Scan project using kics](https://github.com/Checkmarx/kics)
 
 
-
 ## Languages Supported
-- python
+- [x] python
+- [ ] go
+- [ ] nodejs
+- [ ] java
+- [ ] php
+- [ ] csharp
 
 
 
 ## Architectures Supported
-- amd64
-- arm64
+- [x] amd64
+- [x] arm64
 
 
 
 ## Image Types Supported
-- alpine
+- [x] alpine
+- [ ] slim
 
 
 
