@@ -125,13 +125,15 @@ jobs:
         if: steps.check-changes.outputs.dockerfiles == 'true'
         run: |
           REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/results.json"
-          SCAN_KICS_RESULTS=$(jq '.' ${REPORT_FILE})
+          SCAN_KICS_RESULTS=$(cat ${REPORT_FILE} | jq)
 
           echo "# Kics files scan results"                  >> $GITHUB_STEP_SUMMARY
           echo "status: \`${{ steps.scan-kics.outcome }}\`" >> $GITHUB_STEP_SUMMARY
+          # if [[ ${{ steps.scan-kics.outcome }} != 'success' ]]; then
           echo "\`\`\`"                                     >> $GITHUB_STEP_SUMMARY
           echo "${SCAN_KICS_RESULTS}"                       >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`"                                     >> $GITHUB_STEP_SUMMARY
+          # fi
           echo "---"                                        >> $GITHUB_STEP_SUMMARY
 
       - name: "Fail kics"
@@ -170,13 +172,15 @@ jobs:
         id: get-scan-trivy-files-results
         run: |
           REPORT_FILE=".temp/${{ env.MATRIX_PATH}}/reports/trivy-files.json"
-          SCAN_TRIVY_FILES_RESULTS=$(jq '.' ${REPORT_FILE})
+          SCAN_TRIVY_FILES_RESULTS=$(cat ${REPORT_FILE} | jq)
 
           echo "# Trivy files scan results"                           >> $GITHUB_STEP_SUMMARY
           echo "status: \`${{ steps.scan-trivy-files.outcome }}\`"    >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
-          echo "${SCAN_TRIVY_FILES_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+          if [[ ${{ steps.scan-trivy-files.outcome }} != 'success' ]]; then
+            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+            echo "${SCAN_TRIVY_FILES_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+          fi
           echo "---"                                                  >> $GITHUB_STEP_SUMMARY
           echo "SCAN_TRIVY_FILES_RESULTS=${SCAN_TRIVY_FILES_RESULTS}" >> ${GITHUB_ENV}
 
@@ -288,6 +292,7 @@ jobs:
         id: get-image-details
         run: |
           NEW_IMAGE="${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}"
+          docker pull -q ${NEW_IMAGE}
           IMAGE_LABELS=$(docker inspect ${NEW_IMAGE} | jq ".[].Config.Labels")
 
           echo "# Image Details"          >> $GITHUB_STEP_SUMMARY
@@ -326,7 +331,7 @@ jobs:
         id: get-scan-trivy-image-results
         run: |
           REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json"
-          SCAN_TRIVY_IMAGE_RESULTS=$(jq '.' ${REPORT_FILE})
+          SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE} | jq)
 
           echo "# Trivy image scan results
           echo "status: \`${{ steps.scan-triv-files.outcome }}\`      >> $GITHUB_STEP_SUMMARY
