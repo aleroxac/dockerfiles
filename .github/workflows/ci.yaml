@@ -235,7 +235,6 @@ jobs:
           else
             TAG_BASE=$(git rev-parse --short HEAD)
           fi
-          echo "${TAG_BASE}"
           echo "TAG_VERSION=${TAG_BASE}-${{matrix.IMAGE_BASE}}" >> ${GITHUB_ENV}
 
       - name: "Build container image"
@@ -249,7 +248,7 @@ jobs:
             linux/amd64
             linux/arm64
           tags: |
-            aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+            aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}
           build-args: |
             SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
             VENDOR=${{env.IMAGE_VENDOR}}
@@ -280,13 +279,13 @@ jobs:
 
       - name: "Make pull image through harbor"
         id: pull-harbor-image
-        run: docker pull aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+        run: docker pull aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}
 
       - name: "Scan container image via Trivy"
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
+          image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}'
           format: 'table'
           output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
