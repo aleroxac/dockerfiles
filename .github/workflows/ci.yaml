@@ -196,7 +196,7 @@ jobs:
 
       ## ---------- BUILD
       - name: "Login to Container Registry"
-        id: docker-login
+        id: docker-login-build
         uses: docker/login-action@v2.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
@@ -271,6 +271,17 @@ jobs:
 
 
       ## ---------- SCAN-IMAGE
+      - name: "Login to Container Registry"
+        id: docker-login-trivy
+        uses: docker/login-action@v2.1.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASS }}
+
+      - name: "Make pull image through harbor"
+        id: pull-harbor-image
+        run: docker pull aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+
       - name: "Scan container image via Trivy"
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
