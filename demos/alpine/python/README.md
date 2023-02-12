@@ -4,9 +4,8 @@ App for demonstration of how to use python-alpine image.
 
 ## How to run
 ``` shell
-ln -s demo/python/alpine/ .build-python-alpine
 docker build \
-    -f .build-python-alpine/Dockerfile \
+    -f Dockerfile \
     --build-arg IMAGE_NAME=demo-python-alpine \
     --build-arg IMAGE_VERSION=v1 \
     --build-arg IMAGE_ARCHITECTURE=x86_64 \
@@ -29,6 +28,5 @@ docker build \
     --build-arg DOCKER_CMD_DEVEL="" \
     --build-arg DOCKER_CMD_TEST="" \
     --build-arg DOCKER_PARAMS="" \
-    -t aleroxac/demo-python-alpine:v1 .build-python-alpine
-rm -rf .build-python-alpine
+    -t aleroxac/demo-python-alpine:v1 .
 ```

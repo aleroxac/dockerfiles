@@ -1,8 +1,10 @@
 # dockerfiles
-[![ci-python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)
+[![ci](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/aleroxac/dockerfiles)
+![GitHub last release](https://img.shields.io/github/release/aleroxac/dockerfiles)
 
 Badass base container images to be used in any project.
+
 
 
 ## Resources
@@ -11,26 +13,49 @@ Badass base container images to be used in any project.
 - [Label Schema Convention](http://label-schema.org/rc1/)
 - [Semantic Versioning Convention](https://semver.org/spec/v2.0.0.html)
 - [Keep Changelog Convention](https://keepachangelog.com/en/1.0.0/)
+- [Open Source Guides](https://opensource.guide)
+- [Code Manifesto](https://github.com/code-manifesto/code-manifesto)
 - [Docker Content Trust](https://docs.docker.com/engine/security/trust/)
 - [Scan images using aquasec/trivy](https://github.com/aquasecurity/trivy)
 - [Scan dockerfiles using hadolint](https://github.com/hadolint/hadolint)
 - [Scan project using kics](https://github.com/Checkmarx/kics)
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- [OpenSSF Best Practices Badge Program](https://bestpractices.coreinfrastructure.org/en)
+- [Rootless Containers](https://rootlesscontaine.rs/)
+- [Git Flow](https://github.com/petervanderdoes/gitflow-avh)
+
+
+
+## Featues
+- [x] Multiple scans to ensure maximum of conformity and security
+- [x] Automations for doing some boring stuff
+- [x] A demo for each image
+- [x] Trusted pipeline
+- [ ] Images with Content Trusted sign
+- [ ] Unit, integration and e2e tests to ensure peace of mind
+- [ ] Cosign Vulnerability Scan Record Attestation Specification
+- [ ] Detailed documentation of how to handle the project
 
 
 
 ## Languages Supported
-- python
+- [x] python
+- [ ] golang
+- [ ] javascript(nodejs)
+- [ ] php
+- [ ] csharp
 
 
 
 ## Architectures Supported
-- amd64
-- arm64
+- [x] amd64
+- [x] arm64
 
 
 
 ## Image Types Supported
-- alpine
+- [x] alpine
+- [ ] slim
 
 
 
@@ -42,8 +67,13 @@ Badass base container images to be used in any project.
 ## Images and tags
 | image | language | base | arch |status |
 |:-:|:-:|:-:|:-:|:-:|
-|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/amd64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)|
-|[aleroxac/python-alpine](https://hub.docker.com/r/aleroxac/python-alpine)|python|alpine|linux/arm64|[![python-alpine](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci-python-alpine.yaml)|
+|[aleroxac/python](https://hub.docker.com/r/aleroxac/python)|python|alpine|linux/amd64|[![python](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
+
+
+
+## Thanks
+- [vscode](https://github.com/microsoft/vscode)
+- [dive](https://github.com/wagoodman/dive)
 
 
 

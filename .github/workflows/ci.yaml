@@ -1,0 +1,275 @@
+name: ci
+
+
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_id }}-${{ github.job }}
+  cancel-in-progress: true
+
+
+
+env:
+  SCHEMA_VERSION: '1.0.0-rc.1'
+  IMAGE_VENDOR: 'Pede Pronto'
+  IMAGE_MAINTAINER: 'acardoso.ti@gmail'
+
+  BUILD_DATE: $(TZ="America/Sao_Paulo" date +'%Y-%m-%dT%H:%M:%SZ')
+  VCS_REF: $(git rev-parse HEAD)
+  VCS_URL: $(echo https://github.com/aleroxac/dockerfiles/commit/$(git rev-parse HEAD))
+
+
+
+jobs:
+  ci:
+    runs-on: self-hosted
+    name: Build container image
+    strategy:
+      matrix:
+        IMAGE_NAME: [python, java]
+        IMAGE_BASE: [alpine]
+        include:
+          - IMAGE_NAME:         python
+            TAG_VERSION:        $(git rev-parse --short HEAD)-alpine
+            IMAGE_DESCRIPTION:  'Python image base'
+            IMAGE_ARCHITECTURE: 'linux/amd64'
+            OS_VERSION:         '3.9.15'
+            OS_NAME:            'Alpine Linux'
+            KERNEL_VERSION:     '6.0.12-arch1-1'
+
+          - IMAGE_NAME:         java
+            TAG_VERSION:        $(git rev-parse --short HEAD)-alpine
+            IMAGE_DESCRIPTION:  'Java image base'
+            IMAGE_ARCHITECTURE: 'linux/arm64'
+            OS_VERSION:         '3.14.8'
+            OS_NAME:            'Alpine Linux'
+            KERNEL_VERSION:     '6.0.12-arch1-1'
+    steps:
+      ## ---------- SETUP
+      - name: "[SETUP] Install requirements"
+        id: install-requirements
+        run: |
+          requirements=('jq:jq' 'gettext-base:envsubst')
+          for pkg in "${requirements[@]}"; do
+            pkg_name=$(echo ${pkg} | cut -d: -f1)
+            bin_name=$(echo ${pkg} | cut -d: -f2)
+            which ${bin_name} >/dev/null && sudo apt install -y ${pkg_name}
+          done
+
+      - name: "[SETUP] Checkout the code"
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+
+
+      ## ---------- SCAN-FILES
+      ## ----- PREPARE
+      - name: "[SCAN-FILES][PREPARE] Prepare workspace"
+        id: prepare-dockerfile
+        run: |
+          ## Create temp folder and other folders to can store scan results logs and reports
+          mkdir -p .temp/${{matrix.IMAGE_BASE}}${{matrix.IMAGE_NAME}}/{logs,reports}
+
+          ## Compose envfile, replacing shell expansions with its result
+          python3 scripts/compose-envfile.py src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/.env > .temp/${{matrix.IMAGE_BASE}}${{matrix.IMAGE_NAME}}/.env
+
+          ## Import environment variables from envfile to can be used by envsubst
+          source <(sed -r "s/(^[A-Z])/export \1/g" .temp/${{matrix.IMAGE_BASE}}${{matrix.IMAGE_NAME}}/.env
+
+          ## Compose dockerfile, replacing environment variables placeholders with its values by envsubst combined with sed
+          cat src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
+
+
+
+      ## ----- HADOLINT
+      - name: "[SCAN-FILES][HADOLINT] Run Hadolint to check dockerfile linting"
+        id: scan-hadolint
+        uses: hadolint/hadolint-action@v2.1.0
+        continue-on-error: true
+        with:
+          dockerfile: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
+          config: scans/ci/hadolint.yaml
+          output-file: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/hadolint.results
+
+      - name: "[SCAN-FILES][HADOLINT] Post a comment in a Pull Request with Hadolint results"
+        id: comment-pr-hadolint
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `
+            #### Hadolint: \`${{ steps.scan-hadolint.outcome }}\`
+            \`\`\`
+            ${process.env.HADOLINT_RESULTS}
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: "[SCAN-FILES][HADOLINT] Check Hadolint scan results"
+        id: quality-gate-hadolint
+        if: steps.scan-hadolint.outcome != 'success'
+        run: exit 1
+
+
+
+      ## ----- KICS
+      - name: "[SCAN-FILES][KICS] Run Kics to check static code analysis"
+        id: scan-kics
+        uses: checkmarx/kics-github-action@v1.6
+        continue-on-error: true
+        with:
+          path: src
+          config_path: scans/ci/kics.yaml
+
+      - name: "[SCAN-FILES][KICS] Post a comment in a Pull Request with Kics results"
+        id: comment-pr-kics
+        uses: checkmarx/kics-github-action@v1.6
+        if: github.event_name == 'pull_request'
+        with:
+          path: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/kics.json
+          config_path: scans/ci/kics.yaml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          enable_comments: true
+
+      - name: "[SCAN-FILES][KICS] Check Kics scan results"
+        id: quality-gate-kics
+        if: steps.scan-kics.outcome != 'success'
+        run: exit 1
+
+
+
+      ## ----- TRIVY
+      - name: "[SCAN-FILES][TRIVY] Run Trivy Scanner on repo files"
+        id: scan-trivy-files
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-ref: '.'
+          scan-type: fs
+          vuln-type: 'os,library'
+          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/trivy-files.json'
+          security-checks: 'vuln,secret,config'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: "[SCAN-FILES][TRIVY] Post a comment in a Pull Request with Trivy scan files results"
+        id: comment-pr-trivy-files
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `
+            #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
+            \`\`\`
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json}
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: "[SCAN-FILES][TRIVY] Check Trivy scan files results"
+        id: quality-gate-trivy-files
+        if: steps.scan-trivy-files.outcome != 'success'
+        run: exit 1
+
+
+
+      ## ---------- BUILD
+      - name: "[BUILD] Login to Container Registry"
+        id: docker-login
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: https://harbor.home.lab
+          username: ${{ secrets.HARBOR_USER }}
+          password: ${{ secrets.HARBOR_PASS }}
+
+      - name: "[BUILD] Setup build context"
+        id: setup-build-context
+        run: |
+          ln -s src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/ .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+
+      - name: "[BUILD] Build container image"
+        id: build-image
+        uses: docker/build-push-action@v3.2.0
+        with:
+          push: false
+          file: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}/Dockerfile
+          context: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          tags: |
+            harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+          build-args: |
+            SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
+            VENDOR=${{env.IMAGE_VENDOR}}
+            MAINTAINER=${{env.IMAGE_MAINTAINER}}
+
+            BUILD_DATE=${{env.BUILD_DATE}}
+            VCS_REF=${{env.VCS_REF}}
+            VCS_URL=${{env.VCS_URL}}
+
+            NAME=${{matrix.IMAGE_NAME}}
+            VERSION=${{env.TAG_VERSION}}
+            DESCRIPTION=${{matrix.IMAGE_DESCRIPTION}}
+            ARCHITECTURE=${{matrix.IMAGE_ARCHITECTURE}}
+
+            OS_NAME=${{matrix.OS_NAME}}
+            OS_VERSION=${{matrix.OS_VERSION}}
+            KERNEL_VERSION=${{matrix.KERNEL_VERSION}}
+
+
+
+      ## ---------- SCAN-IMAGE
+      - name: "[SCAN-IMAGE] Scan container image via Trivy"
+        id: scan-trivy-image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
+          format: 'table'
+          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: "[SCAN-IMAGE] Post a comment in a Pull Request with Trivy scan image results"
+        id: comment-pr-trivy-image
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `
+            #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
+            \`\`\`
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json}
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: "[SCAN-IMAGE] Check Trivy scan image results"
+        id: quality-gate-trivy-image
+        if: steps.scan-trivy-files.outcome != 'success'
+        run: exit 1

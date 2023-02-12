@@ -1,0 +1,17 @@
+path: src
+exclude-paths: ".env,.dockerignore"
+
+type: [ "Dockerfile" ]
+fail-on: [high,medium,low,info]
+verbose: false
+log-file: false
+
+output-name: kics
+output-path: .temp/reports/
+report-formats: json
+
+bom: true
+no-progress: true
+minimal-ui: true
+no-color: true
+ci: true

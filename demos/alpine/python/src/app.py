@@ -3,7 +3,7 @@ from json import dumps
 
 app = Flask("demo-python-alpine")
 
-@app.route("/api/v1/healthcheck")
+@app.route("/healthz")
 def healthcheck():
     return {"status":"OK"}
 

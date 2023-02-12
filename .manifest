@@ -1,0 +1,66 @@
+version: v1alpha1
+kind: Manifest
+metadata:
+  name: dockerfiles
+spec:
+  tests: []
+  scans:
+    - hadolint
+    - kics
+    - trivy
+  scripts:
+    - compose-envfile
+    - update-versionrefs
+  docs:
+    - readme
+    - changelog
+    - code_of_conduct
+    - contributing
+    - issue_template
+    - license
+    - maintainers
+    - owners
+    - pull_request_template
+    - security_contracts
+    - security
+    - support
+    - index
+  demos:
+    - demo-python-alpine
+  languages:
+    - python:
+      bases:
+        - alpine:
+          containerImagesPath: src/python/alpine
+  build-args:
+    - IMAGE_MAINTAINER
+    - IMAGE_VENDOR
+
+    - AUTHOR_NAME
+    - AUTHOR_USERNAME
+    - AUTHOR_TITLE
+    - AUTHOR_EMAIL
+
+    - SCHEMA_VERSION
+    - LICENSE
+    - BUILD_DATE
+    - VCS_REF
+    - VCS_URL
+
+    - IMAGE_NAME
+    - IMAGE_VERSION
+    - IMAGE_ARCHITECTURE
+    - IMAGE_DESCRIPTION
+    - IMAGE_USAGE
+    - IMAGE_URL
+
+    - OS_NAME
+    - OS_VERSION
+    - KERNEL_VERSION
+
+    - DOCKER_CMD
+    - DOCKER_CMD_DEVEL
+    - DOCKER_CMD_TEST
+    - DOCKER_CMD_DEBUG
+    - DOCKER_CMD_HELP
+    - DOCKER_PARAMS

@@ -1,0 +1,4 @@
+site_name: dockerfiles
+site_url: https://github.com/aleroxac/dockerfiles
+nav:
+  - Home: index.md
