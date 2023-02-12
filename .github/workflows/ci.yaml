@@ -15,14 +15,6 @@ concurrency:
 
 
 
-env:
-  SCHEMA_VERSION: '1.0.0-rc.1'
-  IMAGE_VENDOR: 'Groking Labs'
-  IMAGE_MAINTAINER: 'acardoso.ti@gmail'
-  REPO_URL: 'https://github.com/aleroxac/dockerfiles'
-
-
-
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -31,14 +23,8 @@ jobs:
       matrix:
         IMAGE_NAME: [python]
         IMAGE_BASE: [alpine]
-        include:
-          - IMAGE_NAME:         python
-            IMAGE_DESCRIPTION:  'Python image base'
-            OS_VERSION:         '3.9.15'
-            OS_NAME:            'Alpine Linux'
-            BUILD_DATE:         $(TZ="America/Sao_Paulo" date +'%Y-%m-%dT%H:%M:%SZ')
-            VCS_REF:            $(git rev-parse HEAD)
-            VCS_URL:            $(echo ${{ env.REPO_URL }}/commit/$(git rev-parse HEAD))
+
+
 
     steps:
       ## ---------- SETUP
@@ -74,7 +60,7 @@ jobs:
           ## Compose envfile, replacing shell expansions with its result
           cd ${SRC_FOLDER}
           IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
-          docker pull -q ${IMAGE_BASE}
+          docker pull -q ${IMAGE_BASE} > /dev/null
           FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-envfile.py"
           python ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
@@ -89,6 +75,7 @@ jobs:
           echo "WORK_DIR=${WORK_DIR}"       >> ${GITHUB_ENV}
           echo "SRC_FOLDER=${SRC_FOLDER}"   >> ${GITHUB_ENV}
           echo "TEMP_FOLDER=${TEMP_FOLDER}" >> ${GITHUB_ENV}
+          cat ${TEMP_FOLDER}/.env           >> ${GITHUB_ENV}
 
 
       ## ----- HADOLINT
@@ -141,7 +128,7 @@ jobs:
         uses: checkmarx/kics-github-action@v1.6
         if: github.event_name == 'pull_request'
         with:
-          path: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/kics.json
+          path: .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/kics.json
           config_path: scans/ci/kics.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
@@ -161,7 +148,7 @@ jobs:
           scan-ref: '.'
           scan-type: fs
           vuln-type: 'os,library'
-          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/trivy-files.json'
+          output: '.temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/trivy-files.json'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -207,7 +194,7 @@ jobs:
         run: |
           [ -d .build ] && rm -rf .build || true
           mkdir .build && cp ${{ env.SRC_FOLDER }}/* .build
-          ln -s ${{ env.SRC_FOLDER }} .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          ln -s ${{ env.SRC_FOLDER }} .build-${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}
 
       - name: "Create context for buildx"
         id: create-buildx-context
@@ -235,32 +222,50 @@ jobs:
           else
             TAG_BASE=$(git rev-parse --short HEAD)
           fi
-          echo "TAG_VERSION=${TAG_BASE}-${{matrix.IMAGE_BASE}}" >> ${GITHUB_ENV}
+          echo "TAG_VERSION=${TAG_BASE}-${{ env.IMAGE_BASE }}" >> ${GITHUB_ENV}
 
       - name: "Build container image"
         id: build-image
         uses: docker/build-push-action@v3.2.0
         with:
           push: true
-          file: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}/Dockerfile
-          context: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          file: .build-${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}/Dockerfile
+          context: .build-${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}
           platforms: |
             linux/amd64
             linux/arm64
           tags: |
-            aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}
+            aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
           build-args: |
-            SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
-            VENDOR=${{env.IMAGE_VENDOR}}
-            MAINTAINER=${{env.IMAGE_MAINTAINER}}
-            BUILD_DATE=${{env.BUILD_DATE}}
-            VCS_REF=${{env.VCS_REF}}
-            VCS_URL=${{env.VCS_URL}}
-            NAME=${{matrix.IMAGE_NAME}}
-            VERSION=${{env.TAG_VERSION}}
-            DESCRIPTION=${{matrix.IMAGE_DESCRIPTION}}
-            OS_NAME=${{matrix.OS_NAME}}
-            OS_VERSION=${{matrix.OS_VERSION}}
+            IMAGE_MAINTAINER=${{ env.IMAGE_MAINTAINER }}
+            IMAGE_VENDOR=${{ env.IMAGE_VENDOR }}
+
+            AUTHOR_NAME=${{ env.AUTHOR_NAME }}
+            AUTHOR_USERNAME=${{ env.AUTHOR_USERNAME }}
+            AUTHOR_TITLE=${{ env.AUTHOR_TITLE }}
+            AUTHOR_EMAIL=${{ env.AUTHOR_EMAIL }}
+
+            LICENSE=${{ env.LICENSE }}
+            SCHEMA_VERSION=${{ env.SCHEMA_VERSION }}
+            VCS_REF=${{ env.VCS_REF }}
+            VCS_URL=${{ env.VCS_URL }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+
+            NAME=${{ env.IMAGE_NAME }}
+            VERSION=${{ env.TAG_VERSION}}
+            DESCRIPTION=${{ env.IMAGE_DESCRIPTION }}
+            USAGE=${{ env.IMAGE_USAGE }}
+            URL=${{ env.IMAGE_URL }}
+
+            OS_NAME=${{ env.OS_NAME }}
+            OS_VERSION=${{ env.OS_VERSION }}
+
+            DOCKER_CMD=${{ env.DOCKER_CMD }}
+            DOCKER_CMD_DEVEL=${{ env.DOCKER_CMD_DEVEL }}
+            DOCKER_CMD_TEST=${{ env.DOCKER_CMD_TEST }}
+            DOCKER_CMD_DEBUG=${{ env.DOCKER_CMD_DEBUG }}
+            DOCKER_CMD_HELP=${{ env.DOCKER_CMD_HELP }}
+            DOCKER_PARAMS=${{ env.DOCKER_PARAMS }}
 
 
 
@@ -274,13 +279,13 @@ jobs:
 
       - name: "Make pull image through harbor"
         id: pull-harbor-image
-        run: docker pull aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}
+        run: docker pull aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
 
       - name: "Scan container image via Trivy"
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}'
+          image-ref: 'aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
           format: 'table'
           output: '${{ env.TEMP_FOLDER }}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
