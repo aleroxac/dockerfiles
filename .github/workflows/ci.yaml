@@ -78,7 +78,7 @@ jobs:
           python3 ${WORK_DIR}/scripts/compose-envfile.py ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
           ## Import environment variables from envfile to can be used by envsubst
-          source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env
+          source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env)
 
           ## Compose dockerfile, replacing environment variables placeholders with its values by envsubst combined with sed
           cat ${SRC_FOLDER}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > ${TEMP_FOLDER}/Dockerfile
