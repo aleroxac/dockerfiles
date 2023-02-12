@@ -28,7 +28,7 @@ import-envfile: ## Import envfile to be used during build container image and sc
 ## --- Scan specified dockerfile using hadolint
 define dockerfile-lint
 	$(call format-dockerfile, $(lang), $(base))
-	cp scans/local/hadolint.yaml .temp/hadolint.yaml
+	cp scans/hadolint.yaml .temp/hadolint.yaml
 	docker run --rm \
 		-v ${PWD}/.temp:/scan -w /scan \
 		-w /scan \
@@ -39,7 +39,7 @@ endef
 .PHONY: lint
 lint: create-envfile import-envfile ## Lint yaml files
 	@$(call dockerfile-lint, $(lang), $(base))
-	@yamllint -c scans/yamllint.yaml .
+	@yamllint -s -c scans/yamllint.yaml .
 
 .PHONY: format
 fmt: create-envfile import-envfile ## Format dockerfile
@@ -102,7 +102,7 @@ define scan-kics
 		-v ${PWD}:/scan \
 		-w /scan \
 		-it checkmarx/kics scan \
-			--config /scan/scans/local/kics.yaml
+			--config /scan/scans/kics.yaml
 endef
 
 ## --- Scan files using trivy

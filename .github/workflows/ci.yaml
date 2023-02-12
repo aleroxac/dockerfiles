@@ -5,7 +5,15 @@ name: ci
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+      - 'scans/local_*.yaml'
   push:
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+      - 'scans/local_*.yaml'
 
 
 
@@ -31,7 +39,7 @@ jobs:
       - name: "Install requirements"
         id: install-requirements
         run: |
-          requirements=('jq:jq' 'gettext-base:envsubst')
+          requirements=('jq:jq')
           for pkg in "${requirements[@]}"; do
             pkg_name=$(echo ${pkg} | cut -d: -f1)
             bin_name=$(echo ${pkg} | cut -d: -f2)
@@ -51,13 +59,11 @@ jobs:
       - name: "Prepare workspace"
         id: prepare-dockerfile
         run: |
-          echo ${{ matrix.IMAGE_NAME }}
-          echo ${{ matrix.IMAGE_BASE }}
-
           ## Create temp folder to store scan results logs and reports
           WORK_DIR=$(realpath ${PWD})
-          SRC_FOLDER="${WORK_DIR}/src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
-          TEMP_FOLDER="${WORK_DIR}/.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
+          MATRIX_PATH="${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
+          SRC_FOLDER="${WORK_DIR}/src/${MATRIX_PATH}"
+          TEMP_FOLDER="${WORK_DIR}/.temp/${MATRIX_PATH}"
           mkdir -p ${TEMP_FOLDER}/{logs,reports}
 
           ## Compose envfile, replacing shell expansions with its result
@@ -67,54 +73,22 @@ jobs:
           FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-envfile.py"
           python ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
-          ## Import environment variables from envfile to can be used by envsubst
+          ## Import environment variables from envfile
           source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env)
-
-          ## Compose dockerfile, replacing env-vars placeholders with its values
-          SRC_DOCKERFILE="${SRC_FOLDER}/Dockerfile"
-          TEMP_DOCKERFILE="${TEMP_FOLDER}/Dockerfile"
-          sed "s|\${|'\${|g; s|}|}'|g" ${SRC_DOCKERFILE} | envsubst > ${TEMP_DOCKERFILE}
 
           echo "WORK_DIR=${WORK_DIR}"       >> ${GITHUB_ENV}
           echo "SRC_FOLDER=${SRC_FOLDER}"   >> ${GITHUB_ENV}
           echo "TEMP_FOLDER=${TEMP_FOLDER}" >> ${GITHUB_ENV}
           cat ${TEMP_FOLDER}/.env           >> ${GITHUB_ENV}
 
-
-      ## ----- HADOLINT
-      - name: "Run Hadolint to check dockerfile linting"
-        id: scan-hadolint
-        uses: hadolint/hadolint-action@v2.1.0
-        continue-on-error: true
+      - name: "Check if dockerfile has changes"
+        id: check-changes
+        uses: dorny/paths-filter@v2
         with:
-          dockerfile: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
-          config: scans/ci/hadolint.yaml
-          output-file: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/hadolint.results
+          filters: |
+            dockerfiles:
+              - 'src/*/*/Dockerfile'
 
-      - name: "Post a comment in a Pull Request with Hadolint results"
-        id: comment-pr-hadolint
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        with:
-          script: |
-            const output = `
-            #### Hadolint: \`${{ steps.scan-hadolint.outcome }}\`
-            \`\`\`
-            ${process.env.HADOLINT_RESULTS}
-            \`\`\`
-            `;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      - name: "Fail hadolint"
-        id: quality-gate-hadolint
-        if: steps.scan-hadolint.outcome != 'success'
-        run: exit 1
 
 
       ## ----- KICS
@@ -122,40 +96,91 @@ jobs:
         id: scan-kics
         uses: checkmarx/kics-github-action@v1.6
         continue-on-error: true
+        if: steps.check-changes.outputs.dockerfiles == 'true'
         with:
           path: src
-          config_path: scans/ci/kics.yaml
+          type: Dockerfile
+          fail-on: 'high,medium,low,info'
+          output_path: .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports
+          output_formats: json,html
+          bom: true
+          verbose: true
 
       - name: "Post a comment in a Pull Request with Kics results"
         id: comment-pr-kics
         uses: checkmarx/kics-github-action@v1.6
-        if: github.event_name == 'pull_request'
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.check-changes.outputs.dockerfiles == 'true' &&
+          steps.scan-kics.outcome != 'success'
         with:
-          path: .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/kics.json
-          config_path: scans/ci/kics.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
+          verbose: true
+          path: .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/results.json
+
+      - name: "Get Kics Scanner results"
+        id: get-scan-kics-results
+        if: steps.check-changes.outputs.dockerfiles == 'true'
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # Kics files scan results
+          status: \`${{ steps.scan-kics.outcome }}\`
+          \`\`\`
+          $(jq '.' .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/results.json)
+          \`\`\`
+          ----
+          EOF
 
       - name: "Fail kics"
         id: quality-gate-kics
-        if: steps.scan-kics.outcome != 'success'
+        if: |
+          steps.scan-kics.outcome != 'success' &&
+          steps.check-changes.outputs.dockerfiles == 'true'
         run: exit 1
 
 
       ## ----- TRIVY
+      - name: trivy-cache
+        id: trivy-files-cache
+        uses: actions/cache@v3.2.4
+        continue-on-error: true
+        with:
+          path: /var/cache/trivy
+          key: trivy-cache-${{ hashFiles('src/*/*/Dockerfile') }}
+          restore-keys: trivy-cache-
+
       - name: "Run Trivy Scanner on repo files"
         id: scan-trivy-files
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
+          cache-dir: /var/cache/trivy
           scan-ref: '.'
           scan-type: fs
-          vuln-type: 'os,library'
-          output: '.temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/trivy-files.json'
+          output: '.temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/reports/trivy-files.json'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
+          verbose: true
+
+      - name: "Get Trivy Files Scanner results"
+        id: get-scan-trivy-files-results
+        if: steps.check-changes.outputs.dockerfiles == 'true'
+        run: |
+          REPORT_FILE=".temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/trivy-files.json"
+          SCAN_TRIVY_FILES_RESULTS=$(jq '.' ${REPORT_FILE})
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # Trivy files scan results
+          status: \`${{ steps.scan-triv-files.outcome }}\`
+          \`\`\`
+          ${SCAN_TRIVY_FILES_RESULTS}
+          \`\`\`
+          ----
+          EOF
+          echo "SCAN_TRIVY_FILES_RESULTS=${SCAN_TRIVY_FILES_RESULTS}" >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan files results"
         id: comment-pr-trivy-files
@@ -166,7 +191,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json)
+            $(jq '.' ${{ env.SCAN_TRIVY_FILES_RESULTS }})
             \`\`\`
             `;
 
@@ -189,7 +214,7 @@ jobs:
         id: docker-login-build
         uses: docker/login-action@v2.1.0
         with:
-          username: aleroxac
+          username: ${{ env.AUTHOR_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
 
       - name: "Create build temporary folder"
@@ -231,6 +256,8 @@ jobs:
         id: build-image
         uses: docker/build-push-action@v3.2.0
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           file: .build-${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}/Dockerfile
           context: .build-${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}
@@ -238,7 +265,7 @@ jobs:
             linux/amd64
             linux/arm64
           tags: |
-            aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
+            ${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
           build-args: |
             IMAGE_MAINTAINER=${{ env.IMAGE_MAINTAINER }}
             IMAGE_VENDOR=${{ env.IMAGE_VENDOR }}
@@ -270,6 +297,19 @@ jobs:
             DOCKER_CMD_HELP=${{ env.DOCKER_CMD_HELP }}
             DOCKER_PARAMS=${{ env.DOCKER_PARAMS }}
 
+      - name: "Get container image datails"
+        id: get-image-details
+        run: |
+          NEW_IMAGE="${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}"
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # Image Details
+          image: \`${NEW_IMAGE}\`
+          \`\`\`
+          $(docker inspect ${NEW_IMAGE} | jq ".[].Config.Labels")
+          \`\`\`
+          ----
+          EOF
+
 
 
       ## ---------- SCAN-IMAGE
@@ -277,23 +317,40 @@ jobs:
         id: docker-login-trivy
         uses: docker/login-action@v2.1.0
         with:
-          username: aleroxac
+          username: ${{ env.AUTHOR_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
 
       - name: "Make pull image through harbor"
         id: pull-harbor-image
-        run: docker pull aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
+        run: docker pull ${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}
 
       - name: "Scan container image via Trivy"
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
+          image-ref: '${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
           format: 'table'
-          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
+          output: '.temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
+
+      - name: "Get Trivy Image Scanner results"
+        id: get-scan-trivy-image-results
+        if: steps.check-changes.outputs.dockerfiles == 'true'
+        run: |
+          REPORT_FILE=".temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME}}/reports/trivy-image.json"
+          SCAN_TRIVY_IMAGE_RESULTS=$(jq '.' ${REPORT_FILE})
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # Trivy image scan results
+          status: \`${{ steps.scan-triv-files.outcome }}\`
+          \`\`\`
+          ${SCAN_TRIVY_IMAGE_RESULTS}
+          \`\`\`
+          ----
+          EOF
+          echo "SCAN_TRIVY_IMAGE_RESULTS=${SCAN_TRIVY_IMAGE_RESULTS}" >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan image results"
         id: comment-pr-trivy-image
@@ -304,7 +361,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json)
+            ${process.env.SCAN_TRIVY_IMAGE_RESULTS}
             \`\`\`
             `;
 
@@ -317,5 +374,21 @@ jobs:
 
       - name: "Fail trivy-image"
         id: quality-gate-trivy-image
-        if: steps.scan-trivy-files.outcome != 'success'
+        if: steps.scan-trivy-image.outcome != 'success'
         run: exit 1
+
+
+
+      ## ---------- ARTIFACTS
+      - name: "Generate artifacts"
+        id: generate-artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          name: ${{ env.IMAGE_BASE }}-${{ env.IMAGE_NAME }}-artifacts
+          path: |
+            !.temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/results.*
+            .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/results.json
+            .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/results.html
+            .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/trivy-files.json
+            .temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}/reports/trivy-image.json

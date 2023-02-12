@@ -4,8 +4,7 @@ verbose: false
 failure-threshold: info
 
 
-no-fail: true
-format: tty
+no-color: true
 
 
 strict-labels: true

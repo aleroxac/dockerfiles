@@ -8,10 +8,10 @@ log-file: false
 
 output-name: kics
 output-path: .temp/reports
-report-formats: json
+report-formats: html
 
 bom: true
 no-progress: true
-minimal-ui: true
-no-color: true
-ci: true
+minimal-ui: false
+no-color: false
+ci: false

@@ -5,6 +5,10 @@
 
 Badass base container images to be used in any project.
 
+## Main technologies
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![AquaSec](https://img.shields.io/badge/aqua-%231904DA.svg?style=for-the-badge&logo=aqua&logoColor=#0018A8)
+
 
 
 ## Resources
