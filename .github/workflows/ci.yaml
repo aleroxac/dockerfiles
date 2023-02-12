@@ -75,6 +75,8 @@ jobs:
 
           ## Compose envfile, replacing shell expansions with its result
           cd ${SRC_FOLDER}
+          IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
+          docker pull -q ${IMAGE_BASE}
           python3 ${WORK_DIR}/scripts/compose-envfile.py ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
           ## Import environment variables from envfile to can be used by envsubst
