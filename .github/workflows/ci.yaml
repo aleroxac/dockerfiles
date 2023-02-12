@@ -96,7 +96,7 @@ jobs:
         uses: hadolint/hadolint-action@v2.1.0
         continue-on-error: true
         with:
-          dockerfile: ${TEMP_FOLDER}/Dockerfile
+          dockerfile: ${{ env.TEMP_FOLDER }}/Dockerfile
           config: scans/ci/hadolint.yaml
           output-file: ${{ env.TEMP_FOLDER }}/reports/hadolint.results
 
