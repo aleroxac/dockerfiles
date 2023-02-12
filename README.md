@@ -37,7 +37,6 @@ Badass base container images to be used in any project.
 - [ ] Detailed documentation of how to handle the project
 
 
-
 ## Languages Supported
 - [x] python
 - [ ] golang
