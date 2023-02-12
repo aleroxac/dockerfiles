@@ -32,7 +32,6 @@ jobs:
         IMAGE_BASE: [alpine]
         include:
           - IMAGE_NAME:         python
-            TAG_VERSION:        $(git rev-parse --short HEAD)-alpine
             IMAGE_DESCRIPTION:  'Python image base'
             IMAGE_ARCHITECTURE: 'linux/amd64'
             OS_VERSION:         '3.9.15'
@@ -203,12 +202,41 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASS }}
 
-      - name: "Setup build context"
-        id: setup-build-context
+      - name: "Create build temporary folder"
+        id: create-build-folder
         run: |
           [ -d .build ] && rm -rf .build || true
           mkdir .build && cp ${{ env.SRC_FOLDER }}/* .build
           ln -s ${{ env.SRC_FOLDER }} .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+
+      - name: "Create context for buildx"
+        id: create-buildx-context
+        run: docker context ls | grep builder || docker context create builder
+
+      - name: "Setup qemu"
+        id: setup-qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: "Setup Docker Buildx"
+        id: setup-buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest
+          endpoint: builder
+          platforms: |
+            linux/amd64
+            linux/arm64
+
+      - name: "Setting tag for container image"
+        id: set-image
+        run: |
+          if [[ ${{ github.event.ref }} =~ "refs/tags" ]]; then
+            TAG_BASE=$(git --no-pager tag -l | sort -nr | head -n1 | tr -d "v")
+          else
+            TAG_BASE=$(git rev-parse --short HEAD)
+          fi
+          echo "${TAG_BASE}"
+          echo "TAG_VERSION=${TAG_BASE}-${{matrix.IMAGE_BASE}}" >> ${GITHUB_ENV}
 
       - name: "Build container image"
         id: build-image
@@ -217,8 +245,11 @@ jobs:
           push: false
           file: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}/Dockerfile
           context: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          platforms: |
+            linux/amd64
+            linux/arm64
           tags: |
-            harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+            aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
           build-args: |
             SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
             VENDOR=${{env.IMAGE_VENDOR}}
@@ -244,9 +275,9 @@ jobs:
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
+          image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
           format: 'table'
-          output: '${{ env.TEMP_FOLDER }}/reports/trivy-image.json'
+          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
@@ -260,7 +291,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-image.json}
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json)
             \`\`\`
             `;
 
