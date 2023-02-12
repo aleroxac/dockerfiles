@@ -33,7 +33,6 @@ label-schema:
 
   org.label-schema.os-name: text
   org.label-schema.os-version: semver
-  org.label-schema.kernel-version: semver
 
   org.label-schema.docker.cmd: text
   org.label-schema.docker.cmd.devel: text

@@ -53,7 +53,6 @@ define build
 		--build-arg IMAGE_URL=$(IMAGE_URL) \
 		--build-arg OS_NAME=$(OS_NAME) \
 		--build-arg OS_VERSION=$(OS_VERSION) \
-		--build-arg KERNEL_VERSION=$(KERNEL_VERSION) \
 		--build-arg DOCKER_CMD=$(DOCKER_CMD) \
 		--build-arg DOCKER_CMD_DEVEL=$(DOCKER_CMD_DEVEL) \
 		--build-arg DOCKER_CMD_TEST=$(DOCKER_CMD_TEST) \

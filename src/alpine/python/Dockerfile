@@ -55,7 +55,6 @@ LABEL \
   org.label-schema.url=${IMAGE_URL} \
   org.label-schema.os-name=${OS_NAME} \
   org.label-schema.os-version=${OS_VERSION} \
-  org.label-schema.kernel-version=${KERNEL_VERSION} \
   org.label-schema.docker.cmd=${DOCKER_CMD} \
   org.label-schema.docker.cmd.devel=${DOCKER_CMD_DEVEL} \
   org.label-schema.docker.cmd.test=${DOCKER_CMD_TEST} \
