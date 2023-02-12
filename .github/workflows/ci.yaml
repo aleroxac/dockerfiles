@@ -241,7 +241,7 @@ jobs:
         id: build-image
         uses: docker/build-push-action@v3.2.0
         with:
-          push: false
+          push: true
           file: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}/Dockerfile
           context: .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
           platforms: |
