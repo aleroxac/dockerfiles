@@ -77,7 +77,7 @@ jobs:
           cd ${SRC_FOLDER}
 
           pwd && ls -l
-          docker run --rm -it --entrypoint='' python:3.11.1-alpine3.17 uname -r
+          docker run --rm --entrypoint='' python:3.11.1-alpine3.17 uname -r
 
           python3 ${WORK_DIR}/scripts/compose-envfile.py ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
