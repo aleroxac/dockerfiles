@@ -84,9 +84,9 @@ jobs:
         uses: hadolint/hadolint-action@v2.1.0
         continue-on-error: true
         with:
-          dockerfile: ${{ env.TEMP_FOLDER }}/Dockerfile
+          dockerfile: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
           config: scans/ci/hadolint.yaml
-          output-file: ${{ env.TEMP_FOLDER }}/reports/hadolint.results
+          output-file: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/hadolint.results
 
       - name: "Post a comment in a Pull Request with Hadolint results"
         id: comment-pr-hadolint
@@ -163,7 +163,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-files.json)
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json)
             \`\`\`
             `;
 
@@ -287,7 +287,7 @@ jobs:
         with:
           image-ref: 'aleroxac/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
           format: 'table'
-          output: '${{ env.TEMP_FOLDER }}/reports/trivy-image.json'
+          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
@@ -301,7 +301,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-image.json)
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json)
             \`\`\`
             `;
 

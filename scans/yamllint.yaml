@@ -7,7 +7,7 @@ yaml-files:
 
 rules:
   line-length:
-    max: 90
+    max: 100
     level: warning
   truthy: disable
   braces: enable
