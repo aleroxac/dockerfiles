@@ -19,6 +19,7 @@ env:
   SCHEMA_VERSION: '1.0.0-rc.1'
   IMAGE_VENDOR: 'Groking Labs'
   IMAGE_MAINTAINER: 'acardoso.ti@gmail'
+  REPO_URL: 'https://github.com/aleroxac/dockerfiles'
 
 
 
@@ -33,13 +34,11 @@ jobs:
         include:
           - IMAGE_NAME:         python
             IMAGE_DESCRIPTION:  'Python image base'
-            IMAGE_ARCHITECTURE: 'linux/amd64'
             OS_VERSION:         '3.9.15'
             OS_NAME:            'Alpine Linux'
-            KERNEL_VERSION:     '6.0.12-arch1-1'
             BUILD_DATE:         $(TZ="America/Sao_Paulo" date +'%Y-%m-%dT%H:%M:%SZ')
             VCS_REF:            $(git rev-parse HEAD)
-            VCS_URL:            $(echo https://github.com/aleroxac/dockerfiles/commit/$(git rev-parse HEAD))
+            VCS_URL:            $(echo ${{ env.REPO_URL }}/commit/$(git rev-parse HEAD))
 
     steps:
       ## ---------- SETUP
@@ -66,7 +65,7 @@ jobs:
       - name: "Prepare workspace"
         id: prepare-dockerfile
         run: |
-          ## Create temp folder and other folders to can store scan results logs and reports
+          ## Create temp folder to store scan results logs and reports
           WORK_DIR=$(realpath ${PWD})
           SRC_FOLDER="${WORK_DIR}/src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
           TEMP_FOLDER="${WORK_DIR}/.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
@@ -76,13 +75,16 @@ jobs:
           cd ${SRC_FOLDER}
           IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
           docker pull -q ${IMAGE_BASE}
-          python3 ${WORK_DIR}/scripts/compose-envfile.py ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
+          FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-envfile.py"
+          python ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
           ## Import environment variables from envfile to can be used by envsubst
           source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env)
 
-          ## Compose dockerfile, replacing environment variables placeholders with its values by envsubst combined with sed
-          cat ${SRC_FOLDER}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > ${TEMP_FOLDER}/Dockerfile
+          ## Compose dockerfile, replacing env-vars placeholders with its values
+          SRC_DOCKERFILE="${SRC_FOLDER}/Dockerfile"
+          TEMP_DOCKERFILE="${TEMP_FOLDER}/Dockerfile"
+          sed "s|\${|'\${|g; s|}|}'|g" ${SRC_DOCKERFILE} | envsubst > ${TEMP_DOCKERFILE}
 
           echo "WORK_DIR=${WORK_DIR}"       >> ${GITHUB_ENV}
           echo "SRC_FOLDER=${SRC_FOLDER}"   >> ${GITHUB_ENV}
@@ -95,9 +97,9 @@ jobs:
         uses: hadolint/hadolint-action@v2.1.0
         continue-on-error: true
         with:
-          dockerfile: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
+          dockerfile: ${{ env.TEMP_FOLDER }}/Dockerfile
           config: scans/ci/hadolint.yaml
-          output-file: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/hadolint.results
+          output-file: ${{ env.TEMP_FOLDER }}/reports/hadolint.results
 
       - name: "Post a comment in a Pull Request with Hadolint results"
         id: comment-pr-hadolint
@@ -125,7 +127,6 @@ jobs:
         run: exit 1
 
 
-
       ## ----- KICS
       - name: "Run Kics to check static code analysis"
         id: scan-kics
@@ -149,7 +150,6 @@ jobs:
         id: quality-gate-kics
         if: steps.scan-kics.outcome != 'success'
         run: exit 1
-
 
 
       ## ----- TRIVY
@@ -176,7 +176,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json}
+            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-files.json)
             \`\`\`
             `;
 
@@ -253,19 +253,14 @@ jobs:
             SCHEMA_VERSION=${{env.IMAGE_SCHEMA_VERSION}}
             VENDOR=${{env.IMAGE_VENDOR}}
             MAINTAINER=${{env.IMAGE_MAINTAINER}}
-
             BUILD_DATE=${{env.BUILD_DATE}}
             VCS_REF=${{env.VCS_REF}}
             VCS_URL=${{env.VCS_URL}}
-
             NAME=${{matrix.IMAGE_NAME}}
             VERSION=${{env.TAG_VERSION}}
             DESCRIPTION=${{matrix.IMAGE_DESCRIPTION}}
-            ARCHITECTURE=${{matrix.IMAGE_ARCHITECTURE}}
-
             OS_NAME=${{matrix.OS_NAME}}
             OS_VERSION=${{matrix.OS_VERSION}}
-            KERNEL_VERSION=${{matrix.KERNEL_VERSION}}
 
 
 
@@ -287,7 +282,7 @@ jobs:
         with:
           image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}'
           format: 'table'
-          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
+          output: '${{ env.TEMP_FOLDER }}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
@@ -301,7 +296,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json)
+            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-image.json)
             \`\`\`
             `;
 

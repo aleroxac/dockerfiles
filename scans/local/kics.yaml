@@ -1,8 +1,8 @@
 path: src
 exclude-paths: ".env,.dockerignore"
 
-type: [ "Dockerfile" ]
-fail-on: [high,medium,low,info]
+type: ["Dockerfile"]
+fail-on: [high, medium, low, info]
 verbose: false
 log-file: false
 

@@ -18,7 +18,6 @@ ARG \
   BUILD_DATE \
   IMAGE_NAME \
   IMAGE_VERSION \
-  IMAGE_ARCHITECTURE \
   IMAGE_DESCRIPTION \
   IMAGE_USAGE \
   IMAGE_URL \
@@ -49,7 +48,6 @@ LABEL \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name=${IMAGE_NAME} \
   org.label-schema.version=${IMAGE_VERSION} \
-  org.label-schema.architecture=${IMAGE_ARCHITECTURE} \
   org.label-schema.description=${IMAGE_DESCRIPTION} \
   org.label-schema.usage=${IMAGE_USAGE} \
   org.label-schema.url=${IMAGE_URL} \

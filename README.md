@@ -64,15 +64,33 @@ Badass base container images to be used in any project.
 
 
 ## Images and tags
-| image | language | base | arch |status |
-|:-:|:-:|:-:|:-:|:-:|
-|[aleroxac/python](https://hub.docker.com/r/aleroxac/python)|python|alpine|linux/amd64|[![python](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml/badge.svg)](https://github.com/aleroxac/dockerfiles/actions/workflows/ci.yaml)|
+| image                                                     | language | base | arch      |
+|:---------------------------------------------------------:|:--------:|:----:|:---------:|
+|[aleroxac/python](https://hub.docker.com/r/aleroxac/python)|python    |alpine|linux/amd64|
 
 
 
 ## Thanks
 - [vscode](https://github.com/microsoft/vscode)
+- [docker](https://github.com/docker)
+
+- [make](https://www.gnu.org/software/make/)
+- [python](https://github.com/python)
+
 - [dive](https://github.com/wagoodman/dive)
+
+- [yamllint](https://github.com/adrienverge/yamllint)
+- [hadolint](https://github.com/hadolint/hadolint)
+- [trivy](https://github.com/aquasecurity/trivy)
+- [kics](https://github.com/Checkmarx/kics)
+
+- [git](https://github.com/git/git)
+- [github](https://github.com/github)
+- [github-actions](https://github.com/actions)
+
+- [editorconfig](https://github.com/editorconfig)
+- [mkdocs](https://github.com/mkdocs/mkdocs)
+
 
 
 

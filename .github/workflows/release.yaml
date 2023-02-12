@@ -1,12 +1,10 @@
 name: release-python-alpine
 
 
-
 on:
   push:
     tags:
       - "v*"
-
 
 
 jobs:
@@ -27,8 +25,9 @@ jobs:
 
       - name: push-images
         uses: ./.github/workflows/ci.yml
+        env:
+          IMAGE_TAG: ${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
         with:
           push: true
-          image-ref: 'harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
-          tags: |
-            harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}
+          image-ref: 'aleroxac/${{matrix.IMAGE_NAME}}:${{ env.IMAGE_TAG }}'
+          tags: aleroxac/${{matrix.IMAGE_NAME}}:${{ env.IMAGE_TAG }}

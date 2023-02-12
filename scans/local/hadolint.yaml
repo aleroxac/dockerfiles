@@ -1,6 +1,6 @@
 trustedRegistries: ["docker.io"]
 disable-ignore-pragma: true
-verbose: true
+verbose: false
 failure-threshold: info
 
 
@@ -26,7 +26,6 @@ label-schema:
 
   org.label-schema.name: text
   org.label-schema.version: semver
-  org.label-schema.architecture: text
   org.label-schema.description: text
   org.label-schema.usage: text
   org.label-schema.url: url

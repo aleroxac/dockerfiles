@@ -9,8 +9,6 @@ clean: ## Clean all temp files
 
 
 
-
-
 ## ---------- HELPERS
 .PHONY: create-envfile
 create-envfile: ## Create envfile to be used by scanners
@@ -25,6 +23,27 @@ import-envfile: ## Import envfile to be used during build container image and sc
 	$(eval export)
 
 
+
+## ---------- LINT & FORMAT
+## --- Scan specified dockerfile using hadolint
+define dockerfile-lint
+	$(call format-dockerfile, $(lang), $(base))
+	cp scans/local/hadolint.yaml .temp/hadolint.yaml
+	docker run --rm \
+		-v ${PWD}/.temp:/scan -w /scan \
+		-w /scan \
+		hadolint/hadolint:2.12.0-alpine \
+			hadolint -c hadolint.yaml Dockerfile
+endef
+
+.PHONY: lint
+lint: create-envfile import-envfile ## Lint yaml files
+	@$(call dockerfile-lint, $(lang), $(base))
+	@yamllint -c scans/yamllint.yaml .
+
+.PHONY: format
+fmt: create-envfile import-envfile ## Format dockerfile
+	@$(call format-dockerfile, $(lang), $(base))
 
 
 
@@ -47,7 +66,6 @@ define build
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg IMAGE_NAME=$(IMAGE_NAME) \
 		--build-arg IMAGE_VERSION=$(IMAGE_VERSION) \
-		--build-arg IMAGE_ARCHITECTURE=$(IMAGE_ARCHITECTURE) \
 		--build-arg IMAGE_DESCRIPTION=$(IMAGE_DESCRIPTION) \
 		--build-arg IMAGE_USAGE=$(IMAGE_USAGE) \
 		--build-arg IMAGE_URL=$(IMAGE_URL) \
@@ -69,23 +87,10 @@ build: create-envfile import-envfile ## Build container image
 
 
 
-
-
 ## ---------- SCANS
 ## --- Scan specified dockerfile using hadolint
 define format-dockerfile
 	cat src/$(base)/$(lang)/Dockerfile | envsubst > .temp/Dockerfile
-endef
-
-## --- Scan specified dockerfile using hadolint
-define scan-hadolint
-	$(call format-dockerfile, $(lang), $(base))
-	cp scans/local/hadolint.yaml .temp/hadolint.yaml
-	docker run --rm \
-		-v ${PWD}/.temp:/scan -w /scan \
-		-w /scan \
-		-it hadolint/hadolint:2.12.0-alpine \
-			hadolint -c hadolint.yaml Dockerfile
 endef
 
 ## --- Scan files with kics
@@ -143,8 +148,8 @@ define scan
 endef
 
 .PHONY: scan
-scan: create-envfile import-envfile ## Run scan: [trivy-files, trivy-image, trivy, hadolint, kics]
-	@[ -z $(type) ] && echo "Please, inform the type: [trivy-files,trivy-image,trivy,hadolint,kics]" || true
+scan: create-envfile import-envfile ## Run scan: [trivy-files, trivy-image, trivy, kics]
+	@[ -z $(type) ] && echo "Please, inform the type: [trivy-files, trivy-image, trivy,kics]" || true
 	@[ -z $(lang) ] && echo "Please, inform the lang: [python]" || true
 	@[ -z $(base) ] && echo "Please, inform the base: [alpine]" || true
 	@$(call scan, $(type), $(lang), $(base))
