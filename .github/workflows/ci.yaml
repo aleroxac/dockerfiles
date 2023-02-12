@@ -119,7 +119,7 @@ jobs:
               body: output
             })
 
-      - name: "Check Hadolint scan results"
+      - name: "Fail hadolint"
         id: quality-gate-hadolint
         if: steps.scan-hadolint.outcome != 'success'
         run: exit 1
@@ -145,7 +145,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
 
-      - name: "Check Kics scan results"
+      - name: "Fail kics"
         id: quality-gate-kics
         if: steps.scan-kics.outcome != 'success'
         run: exit 1
@@ -187,7 +187,7 @@ jobs:
               body: output
             })
 
-      - name: "Check Trivy scan files results"
+      - name: "Fail trivy-files"
         id: quality-gate-trivy-files
         if: steps.scan-trivy-files.outcome != 'success'
         run: exit 1
@@ -274,7 +274,7 @@ jobs:
         id: docker-login-trivy
         uses: docker/login-action@v2.1.0
         with:
-          username: ${{ secrets.DOCKERHUB_USER }}
+          username: aleroxac
           password: ${{ secrets.DOCKERHUB_PASS }}
 
       - name: "Make pull image through harbor"
@@ -312,7 +312,7 @@ jobs:
               body: output
             })
 
-      - name: "Check Trivy scan image results"
+      - name: "Fail trivy-image"
         id: quality-gate-trivy-image
         if: steps.scan-trivy-files.outcome != 'success'
         run: exit 1
