@@ -98,7 +98,7 @@ jobs:
         with:
           dockerfile: ${TEMP_FOLDER}/Dockerfile
           config: scans/ci/hadolint.yaml
-          output-file: ${TEMP_FOLDER}/reports/hadolint.results
+          output-file: ${{ env.TEMP_FOLDER }}/reports/hadolint.results
 
       - name: "Post a comment in a Pull Request with Hadolint results"
         id: comment-pr-hadolint
@@ -141,7 +141,7 @@ jobs:
         uses: checkmarx/kics-github-action@v1.6
         if: github.event_name == 'pull_request'
         with:
-          path: ${TEMP_FOLDER}/reports/kics.json
+          path: ${{ env.TEMP_FOLDER }}/reports/kics.json
           config_path: scans/ci/kics.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
@@ -162,7 +162,7 @@ jobs:
           scan-ref: '.'
           scan-type: fs
           vuln-type: 'os,library'
-          output: '${TEMP_FOLDER}/trivy-files.json'
+          output: '${{ env.TEMP_FOLDER }}/trivy-files.json'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -177,7 +177,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' ${TEMP_FOLDER}/reports/trivy-files.json}
+            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-files.json}
             \`\`\`
             `;
 
@@ -208,8 +208,8 @@ jobs:
         id: setup-build-context
         run: |
           [ -d .build ] && rm -rf .build || true
-          mkdir .build && cp ${SRC_FOLDER}/* .build
-          ln -s ${SRC_FOLDER} .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          mkdir .build && cp ${{ env.SRC_FOLDER }}/* .build
+          ln -s ${{ env.SRC_FOLDER }} .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
 
       - name: "Build container image"
         id: build-image
@@ -247,7 +247,7 @@ jobs:
         with:
           image-ref: 'harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
           format: 'table'
-          output: '${TEMP_FOLDER}/reports/trivy-image.json'
+          output: '${{ env.TEMP_FOLDER }}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
@@ -261,7 +261,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' ${TEMP_FOLDER}/reports/trivy-image.json}
+            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-image.json}
             \`\`\`
             `;
 
