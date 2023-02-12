@@ -129,11 +129,9 @@ jobs:
 
           echo "# Kics files scan results"                  >> $GITHUB_STEP_SUMMARY
           echo "status: \`${{ steps.scan-kics.outcome }}\`" >> $GITHUB_STEP_SUMMARY
-          # if [[ ${{ steps.scan-kics.outcome }} != 'success' ]]; then
           echo "\`\`\`"                                     >> $GITHUB_STEP_SUMMARY
           echo "${SCAN_KICS_RESULTS}"                       >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`"                                     >> $GITHUB_STEP_SUMMARY
-          # fi
           echo "---"                                        >> $GITHUB_STEP_SUMMARY
 
       - name: "Fail kics"
@@ -187,7 +185,7 @@ jobs:
       - name: "Post a comment in a Pull Request with Trivy scan files results"
         id: comment-pr-trivy-files
         uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scan-trivy-files.outcome != 'success'
         with:
           script: |
             const output = `
@@ -272,11 +270,12 @@ jobs:
             VCS_URL=${{ env.VCS_URL }}
             BUILD_DATE=${{ env.BUILD_DATE }}
 
-            NAME=${{ env.IMAGE_NAME }}
-            VERSION=${{ env.TAG_VERSION}}
-            DESCRIPTION=${{ env.IMAGE_DESCRIPTION }}
-            USAGE=${{ env.IMAGE_USAGE }}
-            URL=${{ env.IMAGE_URL }}
+            IMAGE_NAME=${{ env.IMAGE_NAME }}
+            IMAGE_BASE=${{ env.IMAGE_BASE }}
+            IMAGE_VERSION=${{ env.TAG_VERSION}}
+            IMAGE_DESCRIPTION=${{ env.IMAGE_DESCRIPTION }}
+            IMAGE_USAGE=${{ env.IMAGE_USAGE }}
+            IMAGE_URL=${{ env.IMAGE_URL }}
 
             OS_NAME=${{ env.OS_NAME }}
             OS_VERSION=${{ env.OS_VERSION }}
@@ -331,20 +330,22 @@ jobs:
         id: get-scan-trivy-image-results
         run: |
           REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json"
-          SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE} | jq)
+          SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE})
 
           echo "# Trivy image scan results
           echo "status: \`${{ steps.scan-triv-files.outcome }}\`      >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
-          echo "${SCAN_TRIVY_IMAGE_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+          if [[ ${{ steps.scan-trivy-files.outcome }} != 'success' ]]; then
+            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+            echo "${SCAN_TRIVY_IMAGE_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+          fi
           echo "---"                                                  >> $GITHUB_STEP_SUMMARY
           echo "SCAN_TRIVY_IMAGE_RESULTS=${SCAN_TRIVY_IMAGE_RESULTS}" >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan image results"
         id: comment-pr-trivy-image
         uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scan-trivy-image.outcome != 'success'
         with:
           script: |
             const output = `
