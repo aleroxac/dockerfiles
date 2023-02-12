@@ -71,7 +71,7 @@ USER root
 WORKDIR /build
 COPY requirements.txt /build/requirements.txt
 RUN pip install --no-cache-dir --prefix=/build -r /build/requirements.txt && \
-    apk add --no-cache --upgrade --virtual pp-pkgs \
+    apk add --no-cache --upgrade --virtual custom-pkgs \
       libcrypto3=3.0.8-r0 \
       libssl3=3.0.8-r0
 
