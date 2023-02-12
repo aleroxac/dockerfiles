@@ -86,7 +86,7 @@ jobs:
 
           ## Compose dockerfile, replacing environment variables placeholders with its values by envsubst combined with sed
           cat ${SRC_FOLDER}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > ${TEMP_FOLDER}/Dockerfile
-          pwd && ls -l && ${TEMP_FOLDER}/Dockerfile
+          pwd && ls -l && cat ${TEMP_FOLDER}/Dockerfile
 
           echo "WORK_DIR=${WORK_DIR}"       >> $GITHUB_ENV
           echo "SRC_FOLDER=${SRC_FOLDER}"   >> $GITHUB_ENV
