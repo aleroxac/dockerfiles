@@ -37,6 +37,7 @@ spec:
     - IMAGE_VENDOR
 
     - AUTHOR_NAME
+    - AUTHOR_BASE
     - AUTHOR_USERNAME
     - AUTHOR_TITLE
     - AUTHOR_EMAIL

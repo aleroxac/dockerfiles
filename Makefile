@@ -65,6 +65,7 @@ define build
 		--build-arg VCS_URL=$(VCS_URL) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg IMAGE_NAME=$(IMAGE_NAME) \
+		--build-arg IMAGE_BASE=$(IMAGE_BASE) \
 		--build-arg IMAGE_VERSION=$(IMAGE_VERSION) \
 		--build-arg IMAGE_DESCRIPTION=$(IMAGE_DESCRIPTION) \
 		--build-arg IMAGE_USAGE=$(IMAGE_USAGE) \

@@ -25,6 +25,7 @@ label-schema:
   org.label-schema.build-date: rfc3339
 
   org.label-schema.name: text
+  org.label-schema.base: text
   org.label-schema.version: semver
   org.label-schema.description: text
   org.label-schema.usage: text

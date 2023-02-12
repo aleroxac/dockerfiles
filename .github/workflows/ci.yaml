@@ -51,6 +51,9 @@ jobs:
       - name: "Prepare workspace"
         id: prepare-dockerfile
         run: |
+          echo ${{ matrix.IMAGE_NAME }}
+          echo ${{ matrix.IMAGE_BASE }}
+
           ## Create temp folder to store scan results logs and reports
           WORK_DIR=$(realpath ${PWD})
           SRC_FOLDER="${WORK_DIR}/src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
@@ -59,8 +62,8 @@ jobs:
 
           ## Compose envfile, replacing shell expansions with its result
           cd ${SRC_FOLDER}
-          IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
-          docker pull -q ${IMAGE_BASE} > /dev/null
+          DOCKERFILE_IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
+          docker pull -q ${DOCKERFILE_IMAGE_BASE} > /dev/null
           FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-envfile.py"
           python ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 

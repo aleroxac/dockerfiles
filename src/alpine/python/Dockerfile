@@ -17,6 +17,7 @@ ARG \
   VCS_URL \
   BUILD_DATE \
   IMAGE_NAME \
+  IMAGE_BASE \
   IMAGE_VERSION \
   IMAGE_DESCRIPTION \
   IMAGE_USAGE \
@@ -46,6 +47,7 @@ LABEL \
   org.label-schema.vcs-url=${VCS_URL} \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name=${IMAGE_NAME} \
+  org.label-schema.base=${IMAGE_BASE} \
   org.label-schema.version=${IMAGE_VERSION} \
   org.label-schema.description=${IMAGE_DESCRIPTION} \
   org.label-schema.usage=${IMAGE_USAGE} \
