@@ -61,7 +61,7 @@ jobs:
         run: |
           ## Create temp folder to store scan results logs and reports
           WORK_DIR=$(realpath ${PWD})
-          MATRIX_PATH="${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME }}"
+          MATRIX_PATH="${{ matrix.IMAGE_BASE }}/${{ matrix.IMAGE_NAME }}"
           SRC_FOLDER="${WORK_DIR}/src/${MATRIX_PATH}"
           TEMP_FOLDER="${WORK_DIR}/.temp/${MATRIX_PATH}"
           mkdir -p ${TEMP_FOLDER}/{logs,reports}
