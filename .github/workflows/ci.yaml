@@ -167,7 +167,6 @@ jobs:
 
       - name: "Get Trivy Files Scanner results"
         id: get-scan-trivy-files-results
-        if: steps.check-changes.outputs.dockerfiles == 'true'
         run: |
           REPORT_FILE=".temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/trivy-files.json"
           SCAN_TRIVY_FILES_RESULTS=$(jq '.' ${REPORT_FILE})
@@ -337,7 +336,6 @@ jobs:
 
       - name: "Get Trivy Image Scanner results"
         id: get-scan-trivy-image-results
-        if: steps.check-changes.outputs.dockerfiles == 'true'
         run: |
           REPORT_FILE=".temp/${{ env.IMAGE_BASE }}/${{ env.IMAGE_NAME}}/reports/trivy-image.json"
           SCAN_TRIVY_IMAGE_RESULTS=$(jq '.' ${REPORT_FILE})
