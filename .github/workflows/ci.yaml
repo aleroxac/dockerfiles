@@ -68,17 +68,23 @@ jobs:
         id: prepare-dockerfile
         run: |
           ## Create temp folder and other folders to can store scan results logs and reports
-          mkdir -p .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/{logs,reports}
+          WORK_DIR=$(realpath ${PWD})
+          SRC_FOLDER="${WORK_DIR}/src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
+          TEMP_FOLDER="${WORK_DIR}/.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}"
+          mkdir -p ${TEMP_FOLDER}/{logs,reports}
 
           ## Compose envfile, replacing shell expansions with its result
-          python3 scripts/compose-envfile.py src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/.env > .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/.env
+          python3 ${WORK_DIR}/scripts/compose-envfile.py ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
           ## Import environment variables from envfile to can be used by envsubst
-          source <(sed -r "s/(^[A-Z])/export \1/g" .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/.env
+          source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env
 
           ## Compose dockerfile, replacing environment variables placeholders with its values by envsubst combined with sed
-          cat src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
+          cat ${SRC_FOLDER}/Dockerfile | sed "s|\${|'\${|g; s|}|}'|g" | envsubst > ${TEMP_FOLDER}/Dockerfile
 
+          echo "WORK_DIR=${WORK_DIR}"       >> $GITHUB_ENV
+          echo "SRC_FOLDER=${SRC_FOLDER}"   >> $GITHUB_ENV
+          echo "TEMP_FOLDER=${TEMP_FOLDER}" >> $GITHUB_ENV
 
 
       ## ----- HADOLINT
@@ -87,9 +93,9 @@ jobs:
         uses: hadolint/hadolint-action@v2.1.0
         continue-on-error: true
         with:
-          dockerfile: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/Dockerfile
+          dockerfile: ${TEMP_FOLDER}/Dockerfile
           config: scans/ci/hadolint.yaml
-          output-file: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/hadolint.results
+          output-file: ${TEMP_FOLDER}/reports/hadolint.results
 
       - name: "Post a comment in a Pull Request with Hadolint results"
         id: comment-pr-hadolint
@@ -132,7 +138,7 @@ jobs:
         uses: checkmarx/kics-github-action@v1.6
         if: github.event_name == 'pull_request'
         with:
-          path: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/kics.json
+          path: ${TEMP_FOLDER}/reports/kics.json
           config_path: scans/ci/kics.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
@@ -153,7 +159,7 @@ jobs:
           scan-ref: '.'
           scan-type: fs
           vuln-type: 'os,library'
-          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/trivy-files.json'
+          output: '${TEMP_FOLDER}/trivy-files.json'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -168,7 +174,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json}
+            $(jq '.' ${TEMP_FOLDER}/reports/trivy-files.json}
             \`\`\`
             `;
 
@@ -198,7 +204,9 @@ jobs:
       - name: "Setup build context"
         id: setup-build-context
         run: |
-          ln -s src/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/ .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
+          [ -d .build ] && rm -rf .build || true
+          mkdir .build && cp ${SRC_FOLDER}/* .build
+          ln -s ${SRC_FOLDER} .build-${{matrix.IMAGE_BASE}}-${{matrix.IMAGE_NAME}}
 
       - name: "Build container image"
         id: build-image
@@ -236,7 +244,7 @@ jobs:
         with:
           image-ref: 'harbor.home.lab/images/${{matrix.IMAGE_NAME}}:${{env.TAG_VERSION}}-${{matrix.IMAGE_BASE}}'
           format: 'table'
-          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json'
+          output: '${TEMP_FOLDER}/reports/trivy-image.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
@@ -250,7 +258,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-image.outcome }}\`
             \`\`\`
-            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-image.json}
+            $(jq '.' ${TEMP_FOLDER}/reports/trivy-image.json}
             \`\`\`
             `;
 
