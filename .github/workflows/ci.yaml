@@ -163,12 +163,11 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
-          verbose: true
 
       - name: "Get Trivy Files Scanner results"
         id: get-scan-trivy-files-results
         run: |
-          REPORT_FILE=".temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/trivy-files.json"
+          REPORT_FILE=".temp/${{ env.IMAGE_BASE}}/${{ env.IMAGE_NAME}}/reports/trivy-files.json"
           SCAN_TRIVY_FILES_RESULTS=$(jq '.' ${REPORT_FILE})
 
           cat << EOF >> $GITHUB_STEP_SUMMARY
