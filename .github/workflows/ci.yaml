@@ -32,7 +32,7 @@ jobs:
     name: Build container image
     strategy:
       matrix:
-        IMAGE_NAME: [python, java]
+        IMAGE_NAME: [python]
         IMAGE_BASE: [alpine]
         include:
           - IMAGE_NAME:         python
@@ -40,14 +40,6 @@ jobs:
             IMAGE_DESCRIPTION:  'Python image base'
             IMAGE_ARCHITECTURE: 'linux/amd64'
             OS_VERSION:         '3.9.15'
-            OS_NAME:            'Alpine Linux'
-            KERNEL_VERSION:     '6.0.12-arch1-1'
-
-          - IMAGE_NAME:         java
-            TAG_VERSION:        $(git rev-parse --short HEAD)-alpine
-            IMAGE_DESCRIPTION:  'Java image base'
-            IMAGE_ARCHITECTURE: 'linux/arm64'
-            OS_VERSION:         '3.14.8'
             OS_NAME:            'Alpine Linux'
             KERNEL_VERSION:     '6.0.12-arch1-1'
     steps:
