@@ -28,7 +28,7 @@ env:
 
 jobs:
   ci:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     name: Build container image
     strategy:
       matrix:
