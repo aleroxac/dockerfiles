@@ -141,7 +141,7 @@ jobs:
         uses: checkmarx/kics-github-action@v1.6
         if: github.event_name == 'pull_request'
         with:
-          path: ${{ env.TEMP_FOLDER }}/reports/kics.json
+          path: .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/kics.json
           config_path: scans/ci/kics.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
           enable_comments: true
@@ -162,7 +162,7 @@ jobs:
           scan-ref: '.'
           scan-type: fs
           vuln-type: 'os,library'
-          output: '${{ env.TEMP_FOLDER }}/trivy-files.json'
+          output: '.temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/trivy-files.json'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -177,7 +177,7 @@ jobs:
             const output = `
             #### Trivy: \`${{ steps.scan-trivy-files.outcome }}\`
             \`\`\`
-            $(jq '.' ${{ env.TEMP_FOLDER }}/reports/trivy-files.json}
+            $(jq '.' .temp/${{matrix.IMAGE_BASE}}/${{matrix.IMAGE_NAME}}/reports/trivy-files.json}
             \`\`\`
             `;
 
