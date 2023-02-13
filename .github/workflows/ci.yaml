@@ -333,7 +333,7 @@ jobs:
           SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE})
 
           echo "# Trivy image scan results"                            >> $GITHUB_STEP_SUMMARY
-          echo "status: \`${{ steps.scan-trivy-image.outcome }}\`      >> $GITHUB_STEP_SUMMARY
+          echo "status: \`${{ steps.scan-trivy-image.outcome }}\`"     >> $GITHUB_STEP_SUMMARY
           if [[ ${{ steps.scan-trivy-image.outcome }} != 'success' ]]; then
             echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
             echo "${SCAN_TRIVY_IMAGE_RESULTS}"                         >> $GITHUB_STEP_SUMMARY
