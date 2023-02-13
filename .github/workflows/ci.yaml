@@ -160,7 +160,8 @@ jobs:
           cache-dir: /var/cache/trivy
           scan-ref: '.'
           scan-type: fs
-          output: '.temp/${{ env.MATRIX_PATH}}/reports/trivy-files.json'
+          format: table
+          output: '.temp/${{ env.MATRIX_PATH}}/reports/trivy-files.table'
           security-checks: 'vuln,secret,config'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -169,18 +170,19 @@ jobs:
       - name: "Get Trivy Files Scanner results"
         id: get-scan-trivy-files-results
         run: |
-          REPORT_FILE=".temp/${{ env.MATRIX_PATH}}/reports/trivy-files.json"
-          SCAN_TRIVY_FILES_RESULTS=$(cat ${REPORT_FILE} | jq)
+          REPORT_FILE=".temp/${{ env.MATRIX_PATH}}/reports/trivy-files.table"
+          SCAN_TRIVY_FILES_RESULTS=$(cat ${REPORT_FILE})
 
-          echo "# Trivy files scan results"                           >> $GITHUB_STEP_SUMMARY
-          echo "status: \`${{ steps.scan-trivy-files.outcome }}\`"    >> $GITHUB_STEP_SUMMARY
-          if [[ ${{ steps.scan-trivy-files.outcome }} != 'success' ]]; then
-            echo "\`\`\`"                                             >> $GITHUB_STEP_SUMMARY
-            echo "${SCAN_TRIVY_FILES_RESULTS}"                        >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`"                                             >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "---"                                                  >> $GITHUB_STEP_SUMMARY
-          echo "SCAN_TRIVY_FILES_RESULTS=${SCAN_TRIVY_FILES_RESULTS}" >> ${GITHUB_ENV}
+          echo "# Trivy files scan results"                        >> $GITHUB_STEP_SUMMARY
+          echo "status: \`${{ steps.scan-trivy-files.outcome }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`"                                            >> $GITHUB_STEP_SUMMARY
+          echo "${SCAN_TRIVY_FILES_RESULTS}"                       >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`"                                            >> $GITHUB_STEP_SUMMARY
+          echo "---"                                               >> $GITHUB_STEP_SUMMARY
+
+          echo "SCAN_TRIVY_FILES_RESULTS<<EOF" >> ${GITHUB_ENV}
+          echo "${SCAN_TRIVY_FILES_RESULTS}"   >> ${GITHUB_ENV}
+          echo "EOF"                           >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan files results"
         id: comment-pr-trivy-files
@@ -332,18 +334,13 @@ jobs:
         run: |
           REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table"
           SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE})
-          echo ${SCAN_TRIVY_IMAGE_RESULTS}
 
-          echo "# Trivy image scan results"                            >> $GITHUB_STEP_SUMMARY
-          echo "status: \`${{ steps.scan-trivy-image.outcome }}\`"     >> $GITHUB_STEP_SUMMARY
-          # if [[ ${{ steps.scan-trivy-image.outcome }} != 'success' ]]; then
-            echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
-            echo 'SCAN_TRIVY_IMAGE_RESULTS<<EOF'                       >> $GITHUB_STEP_SUMMARY
-            echo "${SCAN_TRIVY_IMAGE_RESULTS}"                         >> $GITHUB_STEP_SUMMARY
-            echo "EOF"                                                 >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
-          # fi
-          echo "---"                                                   >> $GITHUB_STEP_SUMMARY
+          echo "# Trivy image scan results"                        >> $GITHUB_STEP_SUMMARY
+          echo "status: \`${{ steps.scan-trivy-image.outcome }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`"                                            >> $GITHUB_STEP_SUMMARY
+          echo "${SCAN_TRIVY_IMAGE_RESULTS}"                       >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`"                                            >> $GITHUB_STEP_SUMMARY
+          echo "---"                                               >> $GITHUB_STEP_SUMMARY
 
           echo "SCAN_TRIVY_IMAGE_RESULTS<<EOF" >> ${GITHUB_ENV}
           echo "${SCAN_TRIVY_IMAGE_RESULTS}"   >> ${GITHUB_ENV}
@@ -387,5 +384,5 @@ jobs:
             !.temp/${{ env.MATRIX_PATH }}/reports/results.*
             .temp/${{ env.MATRIX_PATH }}/reports/results.json
             .temp/${{ env.MATRIX_PATH }}/reports/results.html
-            .temp/${{ env.MATRIX_PATH }}/reports/trivy-files.json
+            .temp/${{ env.MATRIX_PATH }}/reports/trivy-files.table
             .temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table
