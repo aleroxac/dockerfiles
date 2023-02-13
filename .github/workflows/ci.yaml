@@ -321,26 +321,33 @@ jobs:
         with:
           image-ref: '${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
           format: 'table'
-          output: '.temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json'
+          output: '.temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
+          security-checks: vuln
 
       - name: "Get Trivy Image Scanner results"
         id: get-scan-trivy-image-results
         run: |
-          REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json"
+          REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table"
           SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE})
+          echo ${SCAN_TRIVY_IMAGE_RESULTS}
 
           echo "# Trivy image scan results"                            >> $GITHUB_STEP_SUMMARY
           echo "status: \`${{ steps.scan-trivy-image.outcome }}\`"     >> $GITHUB_STEP_SUMMARY
-          if [[ ${{ steps.scan-trivy-image.outcome }} != 'success' ]]; then
+          # if [[ ${{ steps.scan-trivy-image.outcome }} != 'success' ]]; then
             echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
+            echo 'SCAN_TRIVY_IMAGE_RESULTS<<EOF'                       >> $GITHUB_STEP_SUMMARY
             echo "${SCAN_TRIVY_IMAGE_RESULTS}"                         >> $GITHUB_STEP_SUMMARY
+            echo "EOF"                                                 >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
-          fi
+          # fi
           echo "---"                                                   >> $GITHUB_STEP_SUMMARY
-          echo "SCAN_TRIVY_IMAGE_RESULTS=${SCAN_TRIVY_IMAGE_RESULTS}"  >> ${GITHUB_ENV}
+
+          echo "SCAN_TRIVY_IMAGE_RESULTS<<EOF" >> ${GITHUB_ENV}
+          echo "${SCAN_TRIVY_IMAGE_RESULTS}"   >> ${GITHUB_ENV}
+          echo "EOF"                           >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan image results"
         id: comment-pr-trivy-image
@@ -381,4 +388,4 @@ jobs:
             .temp/${{ env.MATRIX_PATH }}/reports/results.json
             .temp/${{ env.MATRIX_PATH }}/reports/results.html
             .temp/${{ env.MATRIX_PATH }}/reports/trivy-files.json
-            .temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json
+            .temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table
