@@ -27,6 +27,8 @@ Badass base container images to be used in any project.
 - [OpenSSF Best Practices Badge Program](https://bestpractices.coreinfrastructure.org/en)
 - [Rootless Containers](https://rootlesscontaine.rs/)
 - [Git Flow](https://github.com/petervanderdoes/gitflow-avh)
+- [Container Structure Tests](https://github.com/GoogleContainerTools/container-structure-test)
+- [Markdown Badges](https://github.com/Ileriayo/markdown-badges)
 
 
 
@@ -97,7 +99,6 @@ Badass base container images to be used in any project.
 
 
 
-
 ## References
 - https://github.com/opencontainers
 - http://label-schema.org/rc1/
@@ -107,3 +108,35 @@ Badass base container images to be used in any project.
 - https://docs.docker.com/develop/develop-images/dockerfile_best-practices
 - https://docs.docker.com/config/labels-custom-metadata/
 - https://docs.docker.com/engine/reference/builder/
+
+- https://docs.docker.com/build/ci/github-actions/examples/#github-cache
+- https://docs.docker.com/language/java/run-tests/
+- https://github.com/dimorinny/dockerfile-testing
+- https://www.gasparevitta.com/posts/docker-unit-test-dockerfile-image/
+- https://medium.com/@renatomefi/unit-testing-writing-dockerfiles-like-a-software-developer-1759f416ce84
+- https://semaphoreci.com/blog/structure-testing-for-docker-containers
+- https://github.com/riyazdf/dockercon-workshop/tree/master/capabilities
+- https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-breakout/docker-breakout-privilege-escalation
+- https://flast101.github.io/docker-privesc/
+- https://www.testcontainers.org/
+- https://docs.sigstore.dev/
+- https://www.youtube.com/watch?v=eRPkNd40n94&ab_channel=FlorianLudewig
+- https://github.com/opencontainers/image-spec/blob/main/spec.md
+- https://github.com/theonemule/docker-waf
+- https://github.com/Tintri/hello-bench
+
+
+
+## Actions
+- https://github.com/brpaz/structure-tests-action
+- https://github.com/reviewdog/action-shellcheck
+- https://github.com/cycjimmy/semantic-release-action
+- https://github.com/actions/checkout
+- https://github.com/snyk/actions/docker
+- https://github.com/github/codeql-action/upload-sarif
+- https://github.com/
+- https://github.com/
+- https://github.com/
+- https://github.com/
+- https://github.com/
+

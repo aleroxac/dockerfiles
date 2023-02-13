@@ -17,9 +17,11 @@ USER python
 FROM base AS main
 USER root
 WORKDIR /app
+
 COPY --from=build /build /usr/local
 COPY src/app.py /app
 USER python
+
 CMD [ "python" , "app.py" ]
 EXPOSE 8000
 HEALTHCHECK CMD ["wget", "-q", "localhost:8000/healthz"]

@@ -5,7 +5,7 @@ help: ## Show this menu
 
 .PHONY: clean
 clean: ## Clean all temp files
-	@rm -rf .temp
+	@sudo rm -rf .temp
 
 
 
@@ -15,7 +15,7 @@ create-envfile: ## Create envfile to be used by scanners
 	@[ -d .temp ] && rm -rf .temp || true
 	@$(eval project_path=$(shell realpath $(PWD)))
 	@mkdir -p $(project_path)/.temp
-	@cd src/$(base)/$(lang) && python3 $(project_path)/scripts/compose-envfile.py $(project_path)/src/$(base)/$(lang)/.env > $(project_path)/.temp/.env
+	@cd src/$(base)/$(lang) && $(project_path)/scripts/compose-dotenvfile.sh $(project_path)/src/$(base)/$(lang)/.env > $(project_path)/.temp/.env
 
 .PHONY: import-envfile
 import-envfile: ## Import envfile to be used during build container image and scans
@@ -26,7 +26,7 @@ import-envfile: ## Import envfile to be used during build container image and sc
 
 ## ---------- LINT & FORMAT
 ## --- Scan specified dockerfile using hadolint
-define dockerfile-lint
+define lint-dockerfile
 	$(call format-dockerfile, $(lang), $(base))
 	cp scans/hadolint.yaml .temp/hadolint.yaml
 	docker run --rm \
@@ -36,10 +36,24 @@ define dockerfile-lint
 			hadolint -c hadolint.yaml Dockerfile
 endef
 
+define lint-yaml
+	yamllint -s -c scans/yamllint.yaml .
+endef
+
+define lint-shell
+	shellcheck -a \
+		--color=always \
+		--exclude=SC2148,SC2034 \
+		--severity=style \
+		scripts/compose-dotenvfile.sh src/*/*/.env
+endef
+
+
 .PHONY: lint
 lint: create-envfile import-envfile ## Lint yaml files
-	@$(call dockerfile-lint, $(lang), $(base))
-	@yamllint -s -c scans/yamllint.yaml .
+	@$(call lint-dockerfile, $(lang), $(base))
+	@$(call lint-yaml)
+	@$(call lint-shell)
 
 .PHONY: format
 fmt: create-envfile import-envfile ## Format dockerfile

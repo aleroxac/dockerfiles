@@ -5,15 +5,13 @@ name: ci
 on:
   workflow_dispatch:
   pull_request:
-    paths-ignore:
-      - '*.md'
-      - 'Makefile'
-      - 'scans/local_*.yaml'
+    paths:
+      - "src/*/*/*"
+      - ".github/workflows/*"
   push:
-    paths-ignore:
-      - '*.md'
-      - 'Makefile'
-      - 'scans/local_*.yaml'
+    paths:
+      - "src/*/*/*"
+      - ".github/workflows/*"
 
 
 
@@ -70,8 +68,8 @@ jobs:
           cd ${SRC_FOLDER}
           DOCKERFILE_IMAGE_BASE=$(sed -n 2p Dockerfile | cut -d' ' -f2)
           docker pull -q ${DOCKERFILE_IMAGE_BASE} > /dev/null
-          FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-envfile.py"
-          python ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
+          FORMAT_DOCKERFILE_SCRIPT="${WORK_DIR}/scripts/compose-dotenvfile.sh"
+          bash ${FORMAT_DOCKERFILE_SCRIPT} ${SRC_FOLDER}/.env > ${TEMP_FOLDER}/.env
 
           ## Import environment variables from envfile
           source <(sed -r "s/(^[A-Z])/export \1/g" ${TEMP_FOLDER}/.env)
@@ -321,6 +319,7 @@ jobs:
         id: scan-trivy-image
         uses: aquasecurity/trivy-action@master
         with:
+          cache-dir: /var/cache/trivy
           image-ref: '${{ env.AUTHOR_USERNAME }}/${{ env.IMAGE_NAME }}:${{env.TAG_VERSION}}'
           format: 'table'
           output: '.temp/${{ env.MATRIX_PATH }}/reports/trivy-image.table'

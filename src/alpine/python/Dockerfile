@@ -88,5 +88,6 @@ RUN addgroup python && \
     adduser -h /app -G python -s /bin/ash -S python && \
     chown -R python .
 USER python
+
 ENTRYPOINT ["python"]
 HEALTHCHECK CMD [ "python --version" ]
