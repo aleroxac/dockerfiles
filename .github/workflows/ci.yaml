@@ -175,9 +175,9 @@ jobs:
           echo "# Trivy files scan results"                           >> $GITHUB_STEP_SUMMARY
           echo "status: \`${{ steps.scan-trivy-files.outcome }}\`"    >> $GITHUB_STEP_SUMMARY
           if [[ ${{ steps.scan-trivy-files.outcome }} != 'success' ]]; then
-            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
-            echo "${SCAN_TRIVY_FILES_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`"                                             >> $GITHUB_STEP_SUMMARY
+            echo "${SCAN_TRIVY_FILES_RESULTS}"                        >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`"                                             >> $GITHUB_STEP_SUMMARY
           fi
           echo "---"                                                  >> $GITHUB_STEP_SUMMARY
           echo "SCAN_TRIVY_FILES_RESULTS=${SCAN_TRIVY_FILES_RESULTS}" >> ${GITHUB_ENV}
@@ -332,15 +332,15 @@ jobs:
           REPORT_FILE=".temp/${{ env.MATRIX_PATH }}/reports/trivy-image.json"
           SCAN_TRIVY_IMAGE_RESULTS=$(cat ${REPORT_FILE})
 
-          echo "# Trivy image scan results
-          echo "status: \`${{ steps.scan-triv-files.outcome }}\`      >> $GITHUB_STEP_SUMMARY
-          if [[ ${{ steps.scan-trivy-files.outcome }} != 'success' ]]; then
-            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
-            echo "${SCAN_TRIVY_IMAGE_RESULTS}"                          >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`"                                               >> $GITHUB_STEP_SUMMARY
+          echo "# Trivy image scan results"                            >> $GITHUB_STEP_SUMMARY
+          echo "status: \`${{ steps.scan-trivy-image.outcome }}\`      >> $GITHUB_STEP_SUMMARY
+          if [[ ${{ steps.scan-trivy-image.outcome }} != 'success' ]]; then
+            echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
+            echo "${SCAN_TRIVY_IMAGE_RESULTS}"                         >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`"                                              >> $GITHUB_STEP_SUMMARY
           fi
-          echo "---"                                                  >> $GITHUB_STEP_SUMMARY
-          echo "SCAN_TRIVY_IMAGE_RESULTS=${SCAN_TRIVY_IMAGE_RESULTS}" >> ${GITHUB_ENV}
+          echo "---"                                                   >> $GITHUB_STEP_SUMMARY
+          echo "SCAN_TRIVY_IMAGE_RESULTS=${SCAN_TRIVY_IMAGE_RESULTS}"  >> ${GITHUB_ENV}
 
       - name: "Post a comment in a Pull Request with Trivy scan image results"
         id: comment-pr-trivy-image
