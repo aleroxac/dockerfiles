@@ -45,9 +45,11 @@ Badass base container images to be used in any project.
 - [x] python
 - [ ] golang
 - [ ] javascript(nodejs)
+- [ ] java
 - [ ] php
 - [ ] csharp
-
+- [ ] lua
+- [ ] shellscript
 
 
 ## Architectures Supported
@@ -59,6 +61,9 @@ Badass base container images to be used in any project.
 ## Image Types Supported
 - [x] alpine
 - [ ] slim
+- [ ] distroless
+- [ ] scratch
+- [ ] debian
 
 
 
