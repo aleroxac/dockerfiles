@@ -30,7 +30,7 @@ Badass base container images to be used in any project.
 
 
 
-## Featues
+## Features
 - [x] Multiple scans to ensure maximum of conformity and security
 - [x] Automations for doing some boring stuff
 - [x] A demo for each image
