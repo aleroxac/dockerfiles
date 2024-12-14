@@ -212,7 +212,7 @@ jobs:
       ## ---------- BUILD
       - name: "Login to Container Registry"
         id: docker-login-build
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           username: ${{ env.AUTHOR_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
@@ -306,7 +306,7 @@ jobs:
       ## ---------- SCAN-IMAGE
       - name: "Login to Container Registry"
         id: docker-login-trivy
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           username: ${{ env.AUTHOR_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASS }}
